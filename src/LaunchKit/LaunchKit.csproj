@@ -18,7 +18,12 @@
 		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<NoWarn>$(NoWarn);CS1591;CA1515</NoWarn>
+		<ApplicationIcon>rocket_24050.ico</ApplicationIcon>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Content Include="rocket_24050.ico" />
+	</ItemGroup>
 
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
