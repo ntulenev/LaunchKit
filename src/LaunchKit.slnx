@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Abstractions/Abstractions.csproj" />
+  <Project Path="Infrastructure/Infrastructure.csproj" />
+  <Project Path="LaunchKit/LaunchKit.csproj" />
+  <Project Path="Logic/Logic.csproj" />
+  <Project Path="Models/Models.csproj" />
+</Solution>
