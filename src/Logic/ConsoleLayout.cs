@@ -2,8 +2,17 @@ using Models;
 
 namespace Logic;
 
+/// <summary>
+/// Calculates grid layout values for the console launcher.
+/// </summary>
 public static class ConsoleLayout
 {
+    /// <summary>
+    /// Calculates the effective layout for the current console size and item count.
+    /// </summary>
+    /// <param name="options">Launcher options that define the preferred layout.</param>
+    /// <param name="itemCount">Number of items that need to be displayed.</param>
+    /// <returns>The computed layout state.</returns>
     public static LayoutState Calculate(LauncherOptions options, int itemCount)
     {
         ArgumentNullException.ThrowIfNull(options);
