@@ -1,4 +1,4 @@
-namespace LaunchKit.Utility;
+namespace Abstractions;
 
 public interface IApplication
 {
