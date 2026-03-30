@@ -7,8 +7,16 @@ using Models;
 
 namespace Infrastructure;
 
+/// <summary>
+/// Launches applications and opens their folders by using operating system processes.
+/// </summary>
 public sealed class ProcessLauncherActions : ILauncherActions
 {
+    /// <summary>
+    /// Launches the specified application entry.
+    /// </summary>
+    /// <param name="application">Application entry to launch.</param>
+    /// <returns>A status message describing the result.</returns>
     public string Launch(ApplicationEntry application)
     {
         ArgumentNullException.ThrowIfNull(application);
@@ -53,6 +61,11 @@ public sealed class ProcessLauncherActions : ILauncherActions
         }
     }
 
+    /// <summary>
+    /// Opens the containing folder for the specified application entry.
+    /// </summary>
+    /// <param name="application">Application entry whose folder should be opened.</param>
+    /// <returns>A status message describing the result.</returns>
     public string OpenContainingFolder(ApplicationEntry application)
     {
         ArgumentNullException.ThrowIfNull(application);
@@ -91,12 +104,22 @@ public sealed class ProcessLauncherActions : ILauncherActions
         }
     }
 
+    /// <summary>
+    /// Determines whether the specified application entry is available for launch.
+    /// </summary>
+    /// <param name="application">Application entry to validate.</param>
+    /// <returns><see langword="true"/> when the entry can be launched; otherwise, <see langword="false"/>.</returns>
     public bool IsAvailable(ApplicationEntry application)
     {
         ArgumentNullException.ThrowIfNull(application);
         return CanLaunch(ResolveValue(application.Path));
     }
 
+    /// <summary>
+    /// Resolves environment variables and trims wrapping quotes in a configured value.
+    /// </summary>
+    /// <param name="value">Raw configured value.</param>
+    /// <returns>The resolved value or an empty string.</returns>
     public string ResolveValue(string? value)
     {
         if (string.IsNullOrWhiteSpace(value))
