@@ -6,6 +6,11 @@ using Terminal.Gui;
 
 namespace Infrastructure;
 
+/// <summary>
+/// Renders the launcher UI by using Terminal.Gui.
+/// </summary>
+/// <param name="launcherActions">Actions available for launcher entries.</param>
+/// <param name="launcherConfiguration">Configuration source used for reload operations.</param>
 public sealed class ConsoleRenderer(
     ILauncherActions launcherActions,
     ILauncherConfiguration launcherConfiguration) : IConsoleRenderer
@@ -13,6 +18,11 @@ public sealed class ConsoleRenderer(
     private readonly ILauncherActions _launcherActions = launcherActions;
     private readonly ILauncherConfiguration _launcherConfiguration = launcherConfiguration;
 
+    /// <summary>
+    /// Starts the interactive launcher window.
+    /// </summary>
+    /// <param name="options">Launcher options to display.</param>
+    /// <param name="cancellationToken">Token used to stop the UI loop.</param>
     public Task RunAsync(LauncherOptions options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(options);
