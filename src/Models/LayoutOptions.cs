@@ -1,5 +1,8 @@
 namespace Models;
 
+/// <summary>
+/// Defines configurable layout settings for launcher tiles.
+/// </summary>
 public sealed class LayoutOptions
 {
     public int Columns { get; set; } = 3;
