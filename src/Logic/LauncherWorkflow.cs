@@ -2,6 +2,11 @@ using Abstractions;
 
 namespace Logic;
 
+/// <summary>
+/// Coordinates configuration loading and UI execution for the launcher.
+/// </summary>
+/// <param name="configuration">Configuration source for launcher options.</param>
+/// <param name="consoleRenderer">Renderer used to display the launcher UI.</param>
 public sealed class LauncherWorkflow(
     ILauncherConfiguration configuration,
     IConsoleRenderer consoleRenderer) : ILauncherWorkflow
@@ -11,6 +16,10 @@ public sealed class LauncherWorkflow(
     private readonly ILauncherConfiguration _configuration = configuration;
     private readonly IConsoleRenderer _consoleRenderer = consoleRenderer;
 
+    /// <summary>
+    /// Runs the launcher workflow.
+    /// </summary>
+    /// <param name="cancellationToken">Token used to stop the workflow.</param>
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var options = _configuration.Load();
