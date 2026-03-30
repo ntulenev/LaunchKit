@@ -1,5 +1,8 @@
 namespace Models;
 
+/// <summary>
+/// Describes a single application entry that can be shown in the launcher.
+/// </summary>
 public sealed class ApplicationEntry
 {
     public string Name { get; set; } = string.Empty;
