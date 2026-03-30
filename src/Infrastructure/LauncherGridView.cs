@@ -6,6 +6,9 @@ using Terminal.Gui;
 
 namespace Infrastructure;
 
+/// <summary>
+/// Displays launcher entries as a paged tile grid.
+/// </summary>
 internal sealed class LauncherGridView : View
 {
     private const int TILE_HEIGHT = 5;
@@ -18,6 +21,12 @@ internal sealed class LauncherGridView : View
     private LauncherOptions _options;
     private int _selectedIndex;
 
+    /// <summary>
+    /// Initializes a new grid view for launcher entries.
+    /// </summary>
+    /// <param name="options">Initial launcher options to display.</param>
+    /// <param name="launcherActions">Actions available for the selected entry.</param>
+    /// <param name="reloadOptions">Delegate that reloads the launcher configuration.</param>
     public LauncherGridView(
         LauncherOptions options,
         ILauncherActions launcherActions,
@@ -38,6 +47,10 @@ internal sealed class LauncherGridView : View
 
     public event EventHandler<string>? StatusChanged;
 
+    /// <summary>
+    /// Builds a text summary for the current selection and page.
+    /// </summary>
+    /// <returns>A summary line describing the grid state.</returns>
     public string BuildSummary()
     {
         var columns = CalculateColumns();
@@ -49,16 +62,25 @@ internal sealed class LauncherGridView : View
                $"Columns: {columns}  Selected: {selectedName}";
     }
 
+    /// <summary>
+    /// Launches the currently selected application entry.
+    /// </summary>
     public void LaunchSelection()
     {
         UpdateStatus(_launcherActions.Launch(_options.Applications[_selectedIndex]));
     }
 
+    /// <summary>
+    /// Opens the containing folder for the currently selected application entry.
+    /// </summary>
     public void OpenSelectionFolder()
     {
         UpdateStatus(_launcherActions.OpenContainingFolder(_options.Applications[_selectedIndex]));
     }
 
+    /// <summary>
+    /// Reloads launcher options while preserving the current selection when possible.
+    /// </summary>
     public void ReloadSelection()
     {
         try
@@ -82,6 +104,11 @@ internal sealed class LauncherGridView : View
         }
     }
 
+    /// <summary>
+    /// Processes keyboard input for navigation and actions.
+    /// </summary>
+    /// <param name="keyEvent">The key event to process.</param>
+    /// <returns><see langword="true"/> when the key is handled; otherwise, <see langword="false"/>.</returns>
     public override bool ProcessKey(KeyEvent keyEvent)
     {
         switch (keyEvent.Key)
@@ -140,6 +167,10 @@ internal sealed class LauncherGridView : View
         }
     }
 
+    /// <summary>
+    /// Redraws the grid contents within the provided bounds.
+    /// </summary>
+    /// <param name="bounds">Bounds that should be redrawn.</param>
     public override void Redraw(Rect bounds)
     {
         Driver.SetAttribute(ColorScheme.Normal);
@@ -164,6 +195,9 @@ internal sealed class LauncherGridView : View
         }
     }
 
+    /// <summary>
+    /// Moves the cursor to the currently selected tile.
+    /// </summary>
     public override void PositionCursor()
     {
         var columns = CalculateColumns();
