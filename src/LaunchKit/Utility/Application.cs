@@ -15,5 +15,6 @@ public sealed class Application(ILauncherWorkflow launcherWorkflow) : IApplicati
     public Task RunAsync(CancellationToken cancellationToken)
         => _launcherWorkflow.RunAsync(cancellationToken);
 
-    private readonly ILauncherWorkflow _launcherWorkflow = launcherWorkflow;
+    private readonly ILauncherWorkflow _launcherWorkflow = launcherWorkflow
+        ?? throw new ArgumentNullException(nameof(launcherWorkflow));
 }
