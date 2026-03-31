@@ -11,6 +11,12 @@ public sealed class LauncherWorkflow(
     ILauncherConfiguration configuration,
     IConsoleRenderer consoleRenderer) : ILauncherWorkflow
 {
+    /// <summary>
+    /// Initializes a workflow with a custom console abstraction for testing.
+    /// </summary>
+    /// <param name="configuration">Configuration source for launcher options.</param>
+    /// <param name="consoleRenderer">Renderer used to display the launcher UI.</param>
+    /// <param name="systemConsole">Console abstraction used for status output.</param>
     internal LauncherWorkflow(
         ILauncherConfiguration configuration,
         IConsoleRenderer consoleRenderer,

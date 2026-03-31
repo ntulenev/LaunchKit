@@ -15,6 +15,12 @@ public sealed class ConsoleRenderer(
     ILauncherActions launcherActions,
     ILauncherConfiguration launcherConfiguration) : IConsoleRenderer
 {
+    /// <summary>
+    /// Initializes a renderer with a custom terminal facade for testing.
+    /// </summary>
+    /// <param name="launcherActions">Actions available for launcher entries.</param>
+    /// <param name="launcherConfiguration">Configuration source used for reload operations.</param>
+    /// <param name="terminalFacade">Facade used to control Terminal.Gui lifecycle operations.</param>
     internal ConsoleRenderer(
         ILauncherActions launcherActions,
         ILauncherConfiguration launcherConfiguration,

@@ -12,11 +12,18 @@ namespace Infrastructure;
 /// </summary>
 public sealed class ProcessLauncherActions : ILauncherActions
 {
+    /// <summary>
+    /// Initializes launcher actions with a custom process starter for testing.
+    /// </summary>
+    /// <param name="processStarter">Process starter used to launch applications and folders.</param>
     internal ProcessLauncherActions(IProcessStarter processStarter)
     {
         _processStarter = processStarter ?? throw new ArgumentNullException(nameof(processStarter));
     }
 
+    /// <summary>
+    /// Initializes launcher actions that use the default process starter.
+    /// </summary>
     public ProcessLauncherActions()
         : this(new ProcessStarter())
     {
