@@ -15,6 +15,15 @@ public sealed class ConsoleRenderer(
     ILauncherActions launcherActions,
     ILauncherConfiguration launcherConfiguration) : IConsoleRenderer
 {
+    internal ConsoleRenderer(
+        ILauncherActions launcherActions,
+        ILauncherConfiguration launcherConfiguration,
+        ITerminalFacade terminalFacade)
+        : this(launcherActions, launcherConfiguration)
+    {
+        _terminalFacade = terminalFacade ?? throw new ArgumentNullException(nameof(terminalFacade));
+    }
+
     /// <summary>
     /// Starts the interactive launcher window.
     /// </summary>
@@ -24,11 +33,11 @@ public sealed class ConsoleRenderer(
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        Application.Init();
+        _terminalFacade.Init();
 
         try
         {
-            var top = Application.Top;
+            var top = _terminalFacade.Top;
             using var window = new Window("LaunchKit")
             {
                 X = 0,
@@ -76,17 +85,17 @@ public sealed class ConsoleRenderer(
                 new StatusItem(Key.Enter, "~Enter~ Launch", gridView.LaunchSelection),
                 new StatusItem(Key.O, "~O~ Open Folder", gridView.OpenSelectionFolder),
                 new StatusItem(Key.F5, "~F5~ Reload", gridView.ReloadSelection),
-                new StatusItem(Key.Esc, "~Esc~ Exit", () => Application.RequestStop())
+                new StatusItem(Key.Esc, "~Esc~ Exit", () => _terminalFacade.RequestStop())
             ]);
 
             top.Add(statusBar);
 
-            using var registration = cancellationToken.Register(() => Application.RequestStop());
-            Application.Run();
+            using var registration = cancellationToken.Register(() => _terminalFacade.RequestStop());
+            _terminalFacade.Run();
         }
         finally
         {
-            Application.Shutdown();
+            _terminalFacade.Shutdown();
         }
 
         return Task.CompletedTask;
@@ -95,6 +104,9 @@ public sealed class ConsoleRenderer(
     private LauncherOptions ReloadOptions()
         => _launcherConfiguration.Load();
 
-    private readonly ILauncherActions _launcherActions = launcherActions;
-    private readonly ILauncherConfiguration _launcherConfiguration = launcherConfiguration;
+    private readonly ILauncherActions _launcherActions = launcherActions
+        ?? throw new ArgumentNullException(nameof(launcherActions));
+    private readonly ILauncherConfiguration _launcherConfiguration = launcherConfiguration
+        ?? throw new ArgumentNullException(nameof(launcherConfiguration));
+    private readonly ITerminalFacade _terminalFacade = new TerminalFacade();
 }

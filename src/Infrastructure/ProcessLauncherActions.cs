@@ -12,6 +12,16 @@ namespace Infrastructure;
 /// </summary>
 public sealed class ProcessLauncherActions : ILauncherActions
 {
+    internal ProcessLauncherActions(IProcessStarter processStarter)
+    {
+        _processStarter = processStarter ?? throw new ArgumentNullException(nameof(processStarter));
+    }
+
+    public ProcessLauncherActions()
+        : this(new ProcessStarter())
+    {
+    }
+
     /// <summary>
     /// Launches the specified application entry.
     /// </summary>
@@ -36,7 +46,7 @@ public sealed class ProcessLauncherActions : ILauncherActions
 
         try
         {
-            _ = Process.Start(startInfo);
+            _ = _processStarter.Start(startInfo);
             return $"Launched: {application.Name.Value}";
         }
         catch (Win32Exception ex)
@@ -74,7 +84,7 @@ public sealed class ProcessLauncherActions : ILauncherActions
 
         try
         {
-            _ = Process.Start(new ProcessStartInfo
+            _ = _processStarter.Start(new ProcessStartInfo
             {
                 FileName = folder,
                 UseShellExecute = true
@@ -107,4 +117,6 @@ public sealed class ProcessLauncherActions : ILauncherActions
     private static string? ResolveContainingFolder(ApplicationEntry application)
         => application.WorkingDirectory?.ContainingFolder
             ?? application.Path.ContainingFolder;
+
+    private readonly IProcessStarter _processStarter;
 }
