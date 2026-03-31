@@ -11,16 +11,6 @@ namespace Infrastructure;
 /// </summary>
 internal sealed class LauncherGridView : View
 {
-    private const int TILE_HEIGHT = 5;
-    private const int TILE_SPACING = 1;
-    private const int TILE_MIN_WIDTH = 28;
-
-    private readonly ILauncherActions _launcherActions;
-    private readonly Func<LauncherOptions> _reloadOptions;
-
-    private LauncherOptions _options;
-    private int _selectedIndex;
-
     /// <summary>
     /// Initializes a new grid view for launcher entries.
     /// </summary>
@@ -53,13 +43,18 @@ internal sealed class LauncherGridView : View
     /// <returns>A summary line describing the grid state.</returns>
     public string BuildSummary()
     {
-        var columns = CalculateColumns();
-        var pages = CalculatePages(columns);
-        var currentPage = _selectedIndex / Math.Max(1, ItemsPerPage(columns));
-        var selectedName = _options.Applications[_selectedIndex].Name;
+        if (!_options.HasApplications)
+        {
+            return "Items: 0  Page: 1/1  Columns: 1  Selected: none";
+        }
 
-        return $"Items: {_options.Applications.Count}  Page: {currentPage + 1}/{pages}  " +
-               $"Columns: {columns}  Selected: {selectedName}";
+        var layout = BuildLayoutState();
+        var pages = layout.CalculatePages(_options.Count);
+        var currentPage = layout.GetPage(_selectedIndex);
+        var selectedName = _options.GetApplication(_selectedIndex).Name.Value;
+
+        return $"Items: {_options.Count}  Page: {currentPage + 1}/{pages}  " +
+               $"Columns: {layout.Columns}  Selected: {selectedName}";
     }
 
     /// <summary>
@@ -67,7 +62,13 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public void LaunchSelection()
     {
-        UpdateStatus(_launcherActions.Launch(_options.Applications[_selectedIndex]));
+        if (!_options.HasApplications)
+        {
+            UpdateStatus("No applications configured.");
+            return;
+        }
+
+        UpdateStatus(_launcherActions.Launch(_options.GetApplication(_selectedIndex)));
     }
 
     /// <summary>
@@ -75,7 +76,13 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public void OpenSelectionFolder()
     {
-        UpdateStatus(_launcherActions.OpenContainingFolder(_options.Applications[_selectedIndex]));
+        if (!_options.HasApplications)
+        {
+            UpdateStatus("No applications configured.");
+            return;
+        }
+
+        UpdateStatus(_launcherActions.OpenContainingFolder(_options.GetApplication(_selectedIndex)));
     }
 
     /// <summary>
@@ -86,9 +93,7 @@ internal sealed class LauncherGridView : View
         try
         {
             _options = _reloadOptions();
-            _selectedIndex = Math.Min(
-                _selectedIndex,
-                Math.Max(0, _options.Applications.Count - 1));
+            _selectedIndex = _options.ClampSelection(_selectedIndex);
 
             UpdateStatus("Configuration reloaded.");
             NotifySelectionChanged();
@@ -122,11 +127,11 @@ internal sealed class LauncherGridView : View
                 return true;
 
             case Key.CursorUp:
-                MoveSelection(-CalculateColumns());
+                MoveSelection(-BuildLayoutState().Columns);
                 return true;
 
             case Key.CursorDown:
-                MoveSelection(CalculateColumns());
+                MoveSelection(BuildLayoutState().Columns);
                 return true;
 
             case Key.Home:
@@ -134,15 +139,15 @@ internal sealed class LauncherGridView : View
                 return true;
 
             case Key.End:
-                SetSelection(_options.Applications.Count - 1);
+                SetSelection(_options.Count - 1);
                 return true;
 
             case Key.PageUp:
-                MoveSelection(-ItemsPerPage(CalculateColumns()));
+                MoveSelection(-BuildLayoutState().ItemsPerPage);
                 return true;
 
             case Key.PageDown:
-                MoveSelection(ItemsPerPage(CalculateColumns()));
+                MoveSelection(BuildLayoutState().ItemsPerPage);
                 return true;
 
             case Key.Enter:
@@ -176,22 +181,25 @@ internal sealed class LauncherGridView : View
         Driver.SetAttribute(ColorScheme.Normal);
         Clear();
 
-        var columns = CalculateColumns();
-        var itemsPerPage = ItemsPerPage(columns);
-        var currentPage = _selectedIndex / Math.Max(1, itemsPerPage);
-        var firstIndex = currentPage * itemsPerPage;
-        var lastIndexExclusive = Math.Min(firstIndex + itemsPerPage, _options.Applications.Count);
-        var tileWidth = CalculateTileWidth(columns);
+        if (!_options.HasApplications)
+        {
+            return;
+        }
+
+        var layout = BuildLayoutState();
+        var currentPage = layout.GetPage(_selectedIndex);
+        var firstIndex = layout.GetFirstIndexForPage(currentPage);
+        var lastIndexExclusive = Math.Min(firstIndex + layout.ItemsPerPage, _options.Count);
 
         for (var index = firstIndex; index < lastIndexExclusive; index++)
         {
-            var pageOffset = index - firstIndex;
-            var row = pageOffset / columns;
-            var column = pageOffset % columns;
-            var x = column * (tileWidth + TILE_SPACING);
-            var y = row * (TILE_HEIGHT + TILE_SPACING);
+            var pageOffset = layout.GetPageOffset(index);
+            var row = layout.GetRow(pageOffset);
+            var column = layout.GetColumn(pageOffset);
+            var x = layout.GetTileX(column);
+            var y = layout.GetTileY(row);
 
-            DrawTile(x, y, tileWidth, _options.Applications[index], index == _selectedIndex, index);
+            DrawTile(x, y, layout, _options.GetApplication(index), index == _selectedIndex, index);
         }
     }
 
@@ -200,15 +208,17 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public override void PositionCursor()
     {
-        var columns = CalculateColumns();
-        var itemsPerPage = ItemsPerPage(columns);
-        var tileWidth = CalculateTileWidth(columns);
-        var currentPage = _selectedIndex / Math.Max(1, itemsPerPage);
-        var pageOffset = _selectedIndex - (currentPage * itemsPerPage);
-        var row = pageOffset / columns;
-        var column = pageOffset % columns;
-        var x = (column * (tileWidth + TILE_SPACING)) + 1;
-        var y = (row * (TILE_HEIGHT + TILE_SPACING)) + 1;
+        if (!_options.HasApplications)
+        {
+            return;
+        }
+
+        var layout = BuildLayoutState();
+        var pageOffset = layout.GetPageOffset(_selectedIndex);
+        var row = layout.GetRow(pageOffset);
+        var column = layout.GetColumn(pageOffset);
+        var x = layout.GetTileX(column) + 1;
+        var y = layout.GetTileY(row) + 1;
 
         Move(Math.Max(0, x), Math.Max(0, y));
     }
@@ -216,41 +226,39 @@ internal sealed class LauncherGridView : View
     private void DrawTile(
         int x,
         int y,
-        int width,
+        LayoutState layout,
         ApplicationEntry application,
         bool isSelected,
         int index)
     {
-        var innerWidth = Math.Max(1, width - 2);
+        var innerWidth = Math.Max(1, layout.TileWidth - 2);
         var borderAttribute = isSelected ? ColorScheme.Focus : ColorScheme.Normal;
         var textAttribute = isSelected ? ColorScheme.Focus : ColorScheme.Normal;
-        var path = _launcherActions.ResolveValue(application.Path);
-        var availability = _launcherActions.IsAvailable(application)
-            ? "Ready"
-            : "Path not found";
+        var contentLines = new[]
+        {
+            $"[{index + 1}] {application.Name.Value}",
+            application.Description.Value,
+            application.Path.Value,
+            FormatAvailability(application.GetAvailability())
+        };
 
         WriteLine(x, y, "+" + new string('-', innerWidth) + "+", borderAttribute);
-        WriteLine(
-            x,
-            y + 1,
-            "|" + Clip($"[{index + 1}] {application.Name}", innerWidth).PadRight(innerWidth) + "|",
-            textAttribute);
-        WriteLine(
-            x,
-            y + 2,
-            "|" + Clip(application.Description ?? string.Empty, innerWidth).PadRight(innerWidth) + "|",
-            textAttribute);
-        WriteLine(
-            x,
-            y + 3,
-            "|" + Clip(path, innerWidth).PadRight(innerWidth) + "|",
-            textAttribute);
-        WriteLine(
-            x,
-            y + 4,
-            "|" + Clip(availability, innerWidth).PadRight(innerWidth) + "|",
-            textAttribute);
-        WriteLine(x, y + 5, "+" + new string('-', innerWidth) + "+", borderAttribute);
+
+        var bodyHeight = Math.Max(1, layout.TileHeight - 2);
+        for (var lineIndex = 0; lineIndex < bodyHeight; lineIndex++)
+        {
+            var content = lineIndex < contentLines.Length
+                ? contentLines[lineIndex]
+                : string.Empty;
+
+            WriteLine(
+                x,
+                y + 1 + lineIndex,
+                "|" + Clip(content, innerWidth).PadRight(innerWidth) + "|",
+                textAttribute);
+        }
+
+        WriteLine(x, y + layout.TileHeight - 1, "+" + new string('-', innerWidth) + "+", borderAttribute);
     }
 
     private void WriteLine(int x, int y, string text, Terminal.Gui.Attribute attribute)
@@ -265,19 +273,16 @@ internal sealed class LauncherGridView : View
         Driver.AddStr(text);
     }
 
-    private void MoveSelection(int delta)
-    {
-        SetSelection(_selectedIndex + delta);
-    }
+    private void MoveSelection(int delta) => SetSelection(_selectedIndex + delta);
 
     private void SetSelection(int index)
     {
-        if (_options.Applications.Count == 0)
+        if (!_options.HasApplications)
         {
             return;
         }
 
-        var clamped = Math.Clamp(index, 0, _options.Applications.Count - 1);
+        var clamped = _options.ClampSelection(index);
         if (clamped == _selectedIndex)
         {
             return;
@@ -288,10 +293,7 @@ internal sealed class LauncherGridView : View
         SetNeedsDisplay();
     }
 
-    private void NotifySelectionChanged()
-    {
-        SelectionChanged?.Invoke(this, BuildSummary());
-    }
+    private void NotifySelectionChanged() => SelectionChanged?.Invoke(this, BuildSummary());
 
     private void UpdateStatus(string status)
     {
@@ -299,45 +301,29 @@ internal sealed class LauncherGridView : View
         SetNeedsDisplay();
     }
 
-    private int CalculateColumns()
-    {
-        var availableWidth = Math.Max(1, Bounds.Width);
-        var configuredColumns = Math.Max(1, _options.Layout.Columns);
-        var tileWidth = Math.Max(TILE_MIN_WIDTH, _options.Layout.TileWidth);
-        var columns = Math.Max(1, availableWidth / Math.Max(1, tileWidth + TILE_SPACING));
-
-        return Math.Max(1, Math.Min(configuredColumns, Math.Min(columns, _options.Applications.Count)));
-    }
-
-    private int CalculatePages(int columns)
-        => Math.Max(
-            1,
-            (int)Math.Ceiling(_options.Applications.Count / (double)Math.Max(1, ItemsPerPage(columns))));
-
-    private int CalculateTileWidth(int columns)
-    {
-        var availableWidth = Math.Max(1, Bounds.Width);
-        var totalSpacing = Math.Max(0, (columns - 1) * TILE_SPACING);
-        var width = (availableWidth - totalSpacing) / Math.Max(1, columns);
-
-        return Math.Max(TILE_MIN_WIDTH, width);
-    }
-
-    private int ItemsPerPage(int columns)
-    {
-        var rows = Math.Max(1, Math.Max(1, Bounds.Height) / (TILE_HEIGHT + TILE_SPACING));
-        return Math.Max(1, rows * columns);
-    }
-
     private static string Clip(string value, int width)
     {
-        if (string.IsNullOrEmpty(value) || value.Length <= width)
-        {
-            return value;
-        }
-
-        return width <= 3
+        return string.IsNullOrEmpty(value) || value.Length <= width
+            ? value
+            : width <= 3
             ? value[..width]
             : $"{value[..(width - 3)]}...";
     }
+
+    private static string FormatAvailability(ApplicationAvailability availability)
+        => availability switch
+        {
+            ApplicationAvailability.Ready => "Ready",
+            ApplicationAvailability.PathNotFound => "Path not found",
+            _ => availability.ToString()
+        };
+
+    private LayoutState BuildLayoutState()
+        => _options.CreateLayoutState(Bounds.Width, Bounds.Height);
+
+    private readonly ILauncherActions _launcherActions;
+    private readonly Func<LauncherOptions> _reloadOptions;
+
+    private LauncherOptions _options;
+    private int _selectedIndex;
 }

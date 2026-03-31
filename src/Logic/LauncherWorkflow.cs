@@ -11,11 +11,6 @@ public sealed class LauncherWorkflow(
     ILauncherConfiguration configuration,
     IConsoleRenderer consoleRenderer) : ILauncherWorkflow
 {
-    private const string NO_APPLICATIONS_MESSAGE = "No applications configured.";
-
-    private readonly ILauncherConfiguration _configuration = configuration;
-    private readonly IConsoleRenderer _consoleRenderer = consoleRenderer;
-
     /// <summary>
     /// Runs the launcher workflow.
     /// </summary>
@@ -23,7 +18,7 @@ public sealed class LauncherWorkflow(
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var options = _configuration.Load();
-        if (options.Applications.Count == 0)
+        if (!options.HasApplications)
         {
             Console.Clear();
             Console.WriteLine(NO_APPLICATIONS_MESSAGE);
@@ -32,6 +27,11 @@ public sealed class LauncherWorkflow(
             return;
         }
 
-        await _consoleRenderer.RunAsync(options, cancellationToken);
+        await _consoleRenderer.RunAsync(options, cancellationToken).ConfigureAwait(false);
     }
+
+    private const string NO_APPLICATIONS_MESSAGE = "No applications configured.";
+
+    private readonly ILauncherConfiguration _configuration = configuration;
+    private readonly IConsoleRenderer _consoleRenderer = consoleRenderer;
 }

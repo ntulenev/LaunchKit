@@ -15,9 +15,6 @@ public sealed class ConsoleRenderer(
     ILauncherActions launcherActions,
     ILauncherConfiguration launcherConfiguration) : IConsoleRenderer
 {
-    private readonly ILauncherActions _launcherActions = launcherActions;
-    private readonly ILauncherConfiguration _launcherConfiguration = launcherConfiguration;
-
     /// <summary>
     /// Starts the interactive launcher window.
     /// </summary>
@@ -76,9 +73,9 @@ public sealed class ConsoleRenderer(
             top.Add(window);
 
             using var statusBar = new StatusBar([
-                new StatusItem(Key.Enter, "~Enter~ Launch", () => gridView.LaunchSelection()),
-                new StatusItem(Key.O, "~O~ Open Folder", () => gridView.OpenSelectionFolder()),
-                new StatusItem(Key.F5, "~F5~ Reload", () => gridView.ReloadSelection()),
+                new StatusItem(Key.Enter, "~Enter~ Launch", gridView.LaunchSelection),
+                new StatusItem(Key.O, "~O~ Open Folder", gridView.OpenSelectionFolder),
+                new StatusItem(Key.F5, "~F5~ Reload", gridView.ReloadSelection),
                 new StatusItem(Key.Esc, "~Esc~ Exit", () => Application.RequestStop())
             ]);
 
@@ -97,4 +94,7 @@ public sealed class ConsoleRenderer(
 
     private LauncherOptions ReloadOptions()
         => _launcherConfiguration.Load();
+
+    private readonly ILauncherActions _launcherActions = launcherActions;
+    private readonly ILauncherConfiguration _launcherConfiguration = launcherConfiguration;
 }

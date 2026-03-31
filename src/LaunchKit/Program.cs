@@ -25,4 +25,4 @@ var builder = Host.CreateDefaultBuilder()
 var host = builder.Build();
 using var scope = host.Services.CreateScope();
 var application = scope.ServiceProvider.GetRequiredService<IApplication>();
-await application.RunAsync(cancellationTokenSource.Token);
+await application.RunAsync(cancellationTokenSource.Token).ConfigureAwait(false);

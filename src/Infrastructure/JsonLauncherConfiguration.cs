@@ -22,9 +22,9 @@ public sealed class JsonLauncherConfiguration : ILauncherConfiguration
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
             .Build();
 
-        var options = configuration.GetSection("Launcher").Get<LauncherOptions>()
-            ?? new LauncherOptions();
+        var document = configuration.GetSection("Launcher").Get<LauncherConfigurationDocument>()
+            ?? new LauncherConfigurationDocument();
 
-        return options;
+        return document.ToOptions();
     }
 }
