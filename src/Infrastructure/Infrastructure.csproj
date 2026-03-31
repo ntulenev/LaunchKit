@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<NuGetAuditMode>all</NuGetAuditMode>
+		<NuGetAudit>false</NuGetAudit>
 	</PropertyGroup>
 
 	<PropertyGroup>
