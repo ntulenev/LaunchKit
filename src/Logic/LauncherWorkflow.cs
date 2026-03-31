@@ -11,6 +11,15 @@ public sealed class LauncherWorkflow(
     ILauncherConfiguration configuration,
     IConsoleRenderer consoleRenderer) : ILauncherWorkflow
 {
+    internal LauncherWorkflow(
+        ILauncherConfiguration configuration,
+        IConsoleRenderer consoleRenderer,
+        ISystemConsole systemConsole)
+        : this(configuration, consoleRenderer)
+    {
+        _systemConsole = systemConsole ?? throw new ArgumentNullException(nameof(systemConsole));
+    }
+
     /// <summary>
     /// Runs the launcher workflow.
     /// </summary>
@@ -20,9 +29,9 @@ public sealed class LauncherWorkflow(
         var options = _configuration.Load();
         if (!options.HasApplications)
         {
-            Console.Clear();
-            Console.WriteLine(NO_APPLICATIONS_MESSAGE);
-            Console.WriteLine(
+            _systemConsole.Clear();
+            _systemConsole.WriteLine(NO_APPLICATIONS_MESSAGE);
+            _systemConsole.WriteLine(
                 $"Edit {Path.Combine(AppContext.BaseDirectory, "appsettings.json")} and restart.");
             return;
         }
@@ -32,6 +41,9 @@ public sealed class LauncherWorkflow(
 
     private const string NO_APPLICATIONS_MESSAGE = "No applications configured.";
 
-    private readonly ILauncherConfiguration _configuration = configuration;
-    private readonly IConsoleRenderer _consoleRenderer = consoleRenderer;
+    private readonly ILauncherConfiguration _configuration = configuration
+        ?? throw new ArgumentNullException(nameof(configuration));
+    private readonly IConsoleRenderer _consoleRenderer = consoleRenderer
+        ?? throw new ArgumentNullException(nameof(consoleRenderer));
+    private readonly ISystemConsole _systemConsole = new SystemConsole();
 }
