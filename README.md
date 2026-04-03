@@ -148,3 +148,9 @@ Publish:
 ```powershell
 dotnet publish .\src\LaunchKit\LaunchKit.csproj -c Release -r win-x64 --self-contained false
 ```
+
+## Launch Example
+
+Example tile view after starting the launcher:
+
+![LaunchKit launch example](./Screenshot.png)
