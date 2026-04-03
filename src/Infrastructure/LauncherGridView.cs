@@ -238,7 +238,7 @@ internal sealed class LauncherGridView : View
         {
             $"[{index + 1}] {application.Name.Value}",
             application.Description.Value,
-            application.Path.Value,
+            GetPathDisplayText(application),
             FormatAvailability(application.GetAvailability())
         };
 
@@ -317,6 +317,15 @@ internal sealed class LauncherGridView : View
             ApplicationAvailability.PathNotFound => "Path not found",
             _ => availability.ToString()
         };
+
+    internal string GetPathDisplayText(ApplicationEntry application)
+    {
+        ArgumentNullException.ThrowIfNull(application);
+
+        return _options.ShowFullPath
+            ? application.Path.Value
+            : application.Path.GetDisplayName();
+    }
 
     private LayoutState BuildLayoutState()
         => _options.CreateLayoutState(Bounds.Width, Bounds.Height);

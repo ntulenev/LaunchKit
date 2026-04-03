@@ -110,6 +110,37 @@ public sealed class LauncherOptionsTests
         state.TileSpacing.Should().Be(2);
     }
 
+    [Fact(DisplayName = "The show full path flag defaults to true.")]
+    [Trait("Category", "Unit")]
+    public void ShowFullPathShouldDefaultToTrue()
+    {
+        // Arrange
+        var options = new LauncherOptions(new LayoutOptions(), [CreateApplication("LaunchKit")]);
+
+        // Act
+        var showFullPath = options.ShowFullPath;
+
+        // Assert
+        showFullPath.Should().BeTrue();
+    }
+
+    [Fact(DisplayName = "The show full path flag can be disabled.")]
+    [Trait("Category", "Unit")]
+    public void ShowFullPathShouldUseConfiguredValue()
+    {
+        // Arrange
+        var options = new LauncherOptions(
+            new LayoutOptions(),
+            [CreateApplication("LaunchKit")],
+            showFullPath: false);
+
+        // Act
+        var showFullPath = options.ShowFullPath;
+
+        // Assert
+        showFullPath.Should().BeFalse();
+    }
+
     private static ApplicationEntry CreateApplication(string name)
         => ApplicationEntry.Create(name, "dotnet");
 }

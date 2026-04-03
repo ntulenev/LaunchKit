@@ -11,6 +11,8 @@ public sealed class LauncherConfigurationDocument
 {
     public LayoutConfigurationDocument Layout { get; set; } = new();
 
+    public bool ShowFullPath { get; set; } = true;
+
     public Collection<ApplicationEntryDocument> Applications { get; } = [];
 
     /// <summary>
@@ -20,5 +22,6 @@ public sealed class LauncherConfigurationDocument
     public LauncherOptions ToOptions()
         => new(
             Layout.ToOptions(),
-            Applications.Select((application, index) => application.ToModel(index)));
+            Applications.Select((application, index) => application.ToModel(index)),
+            ShowFullPath);
 }

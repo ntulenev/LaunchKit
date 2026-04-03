@@ -11,6 +11,7 @@ public sealed class LauncherConfigurationDocumentTests
         // Arrange
         var document = new LauncherConfigurationDocument
         {
+            ShowFullPath = false,
             Layout = new LayoutConfigurationDocument
             {
                 Columns = 2,
@@ -40,6 +41,7 @@ public sealed class LauncherConfigurationDocumentTests
         options.Layout.TileWidth.Should().Be(42);
         options.Layout.TileHeight.Should().Be(8);
         options.Layout.TileSpacing.Should().Be(4);
+        options.ShowFullPath.Should().BeFalse();
         options.Applications.Should().HaveCount(2);
         options.Applications[0].Name.Value.Should().Be("Editor");
         options.Applications[0].Arguments.Value.Should().Be(".");

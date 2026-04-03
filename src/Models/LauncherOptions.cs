@@ -12,17 +12,26 @@ public sealed class LauncherOptions
     /// </summary>
     /// <param name="layout">Configured layout options.</param>
     /// <param name="applications">Configured application entries.</param>
-    public LauncherOptions(LayoutOptions layout, IEnumerable<ApplicationEntry> applications)
+    /// <param name="showFullPath">
+    /// <see langword="true"/> to show the full configured path in tiles; otherwise, show only the executable or command name.
+    /// </param>
+    public LauncherOptions(
+        LayoutOptions layout,
+        IEnumerable<ApplicationEntry> applications,
+        bool showFullPath = true)
     {
         Layout = layout ?? throw new ArgumentNullException(nameof(layout));
         ArgumentNullException.ThrowIfNull(applications);
 
         Applications = new ReadOnlyCollection<ApplicationEntry>([.. applications]);
+        ShowFullPath = showFullPath;
     }
 
     public LayoutOptions Layout { get; }
 
     public ReadOnlyCollection<ApplicationEntry> Applications { get; }
+
+    public bool ShowFullPath { get; }
 
     public int Count => Applications.Count;
 

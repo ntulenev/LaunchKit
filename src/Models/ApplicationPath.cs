@@ -41,6 +41,27 @@ public sealed record ApplicationPath
             ? IOPath.GetDirectoryName(Value)
             : null;
 
+    /// <summary>
+    /// Gets a compact display name for the configured path.
+    /// </summary>
+    /// <returns>
+    /// The executable or folder name when the value looks like a path; otherwise, the command text itself.
+    /// </returns>
+    public string GetDisplayName()
+    {
+        if (!HasPathHints(Value))
+        {
+            return Value;
+        }
+
+        var trimmedValue = Value.TrimEnd(IOPath.DirectorySeparatorChar, IOPath.AltDirectorySeparatorChar);
+        var fileName = IOPath.GetFileName(trimmedValue);
+
+        return string.IsNullOrWhiteSpace(fileName)
+            ? Value
+            : fileName;
+    }
+
     public string? ProcessWorkingDirectory
         => File.Exists(Value)
             ? IOPath.GetDirectoryName(Value)

@@ -137,6 +137,35 @@ public sealed class ApplicationPathTests
         directory.Should().Be(IOPath.GetDirectoryName(filePath));
     }
 
+    [Fact(DisplayName = "The display name returns the command for a command-like path.")]
+    [Trait("Category", "Unit")]
+    public void GetDisplayNameShouldReturnCommandWhenValueIsCommand()
+    {
+        // Arrange
+        var path = new ApplicationPath("dotnet");
+
+        // Act
+        var displayName = path.GetDisplayName();
+
+        // Assert
+        displayName.Should().Be("dotnet");
+    }
+
+    [Fact(DisplayName = "The display name returns the file name for a file path.")]
+    [Trait("Category", "Unit")]
+    public void GetDisplayNameShouldReturnFileNameWhenValueContainsDirectoryInformation()
+    {
+        // Arrange
+        var filePath = IOPath.Combine(Path.GetTempPath(), "LaunchKit", "JiraMetrics.exe");
+        var path = new ApplicationPath(filePath);
+
+        // Act
+        var displayName = path.GetDisplayName();
+
+        // Assert
+        displayName.Should().Be("JiraMetrics.exe");
+    }
+
     [Fact(DisplayName = "The process working directory is returned for an existing file path.")]
     [Trait("Category", "Unit")]
     public void ProcessWorkingDirectoryShouldReturnParentWhenFileExists()
