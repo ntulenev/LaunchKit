@@ -10,6 +10,7 @@ The application renders a tile grid in the terminal, lets the user navigate with
 - Launcher entries loaded from `src/LaunchKit/appsettings.json`
 - Keyboard navigation with page-aware grid layout
 - Launch selected application with `Enter`
+- Launch selected application as administrator with `A`
 - Open selected application folder with `O`
 - Reload configuration with `F5`
 - Availability status per entry: `Ready` or `Path not found`
@@ -23,6 +24,7 @@ The application renders a tile grid in the terminal, lets the user navigate with
 - `Home` / `End`: jump to first or last item
 - `PageUp` / `PageDown`: move by page
 - `Enter`: launch selected item
+- `A`: launch selected item as administrator
 - `O`: open containing folder
 - `F5`: reload `appsettings.json`
 - `Esc`: exit
@@ -118,7 +120,7 @@ The terminal UI shows:
 - summary line with item count, page, columns, and selected application
 - help line with key bindings
 - tile grid with entry name, description, path or executable name, and availability
-- status bar with actions
+- status bar with launch, admin launch, folder, reload, and exit actions
 
 The grid layout is calculated from:
 
