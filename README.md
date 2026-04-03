@@ -9,9 +9,11 @@ The application renders a tile grid in the terminal, lets the user navigate with
 - Terminal UI built with `Terminal.Gui`
 - Launcher entries loaded from `src/LaunchKit/appsettings.json`
 - Keyboard navigation with page-aware grid layout
+- Application grouping by tabs such as `Metrics` and `Productivity`
 - Launch selected application with `Enter`
 - Launch selected application as administrator with `A`
 - Open selected application folder with `O`
+- Switch to the next tab with `Tab`
 - Reload configuration with `F5`
 - Availability status per entry: `Ready` or `Path not found`
 - Environment variable expansion for configured paths and arguments
@@ -23,6 +25,7 @@ The application renders a tile grid in the terminal, lets the user navigate with
 - `Left` / `Right` / `Up` / `Down`: move selection
 - `Home` / `End`: jump to first or last item
 - `PageUp` / `PageDown`: move by page
+- `Tab`: switch to the next tab
 - `Enter`: launch selected item
 - `A`: launch selected item as administrator
 - `O`: open containing folder
@@ -48,6 +51,7 @@ The domain layer is intentionally immutable.
 String-like data is represented with dedicated value objects:
 
 - `ApplicationName`
+- `ApplicationTab`
 - `ApplicationPath`
 - `LaunchArguments`
 - `WorkingDirectoryPath`
@@ -76,6 +80,7 @@ Example:
     "Applications": [
       {
         "Name": "VS Code",
+        "Tab": "Productivity",
         "Path": "%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\Code.exe",
         "Arguments": "",
         "Description": "Code editor",
@@ -118,9 +123,10 @@ Folder resolution rules:
 The terminal UI shows:
 
 - summary line with item count, page, columns, and selected application
+- tab strip showing the active group
 - help line with key bindings
 - tile grid with entry name, description, path or executable name, and availability
-- status bar with launch, admin launch, folder, reload, and exit actions
+- status bar with tab, launch, admin launch, folder, reload, and exit actions
 
 The grid layout is calculated from:
 
