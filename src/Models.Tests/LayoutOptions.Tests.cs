@@ -39,7 +39,8 @@ public sealed class LayoutOptionsTests
 
         // Assert
         state.Columns.Should().Be(2);
-        state.ItemsPerPage.Should().Be(6);
+        state.RowsPerPage.Should().Be(4);
+        state.ItemsPerPage.Should().Be(8);
     }
 
     [Fact(DisplayName = "The calculated state clamps the number of columns to the item count.")]
@@ -54,6 +55,21 @@ public sealed class LayoutOptionsTests
 
         // Assert
         state.Columns.Should().Be(2);
+    }
+
+    [Fact(DisplayName = "The calculated state uses the last available row when no trailing spacing is required.")]
+    [Trait("Category", "Unit")]
+    public void CalculateStateShouldFitThreeRowsWithoutTrailingSpacing()
+    {
+        // Arrange
+        var options = new LayoutOptions(columns: 3, tileWidth: 34, tileHeight: 6, tileSpacing: 2);
+
+        // Act
+        var state = options.CalculateState(120, 22, 9);
+
+        // Assert
+        state.RowsPerPage.Should().Be(3);
+        state.ItemsPerPage.Should().Be(9);
     }
 
     [Fact(DisplayName = "The calculated state applies minimum dimensions when the available size is too small.")]

@@ -54,7 +54,7 @@ public sealed class LayoutOptions
             columns--;
         }
 
-        var rowsPerPage = Math.Max(1, normalizedHeight / (tileHeight + tileSpacing));
+        var rowsPerPage = Math.Max(1, (normalizedHeight + tileSpacing) / (tileHeight + tileSpacing));
         var itemsPerPage = Math.Max(1, rowsPerPage * columns);
 
         return new LayoutState(
