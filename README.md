@@ -64,6 +64,7 @@ Example:
 ```json
 {
   "Launcher": {
+    "ShowFullPath": false,
     "Layout": {
       "Columns": 3,
       "TileWidth": 34,
@@ -116,7 +117,7 @@ The terminal UI shows:
 
 - summary line with item count, page, columns, and selected application
 - help line with key bindings
-- tile grid with entry name, description, path, and availability
+- tile grid with entry name, description, path or executable name, and availability
 - status bar with actions
 
 The grid layout is calculated from:
