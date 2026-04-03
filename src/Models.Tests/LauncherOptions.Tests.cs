@@ -141,6 +141,46 @@ public sealed class LauncherOptionsTests
         showFullPath.Should().BeFalse();
     }
 
+    [Fact(DisplayName = "Tabs are grouped in the order they first appear.")]
+    [Trait("Category", "Unit")]
+    public void TabsShouldBeGroupedInConfigurationOrder()
+    {
+        // Arrange
+        var options = new LauncherOptions(
+            new LayoutOptions(),
+            [
+                ApplicationEntry.Create("JiraMetrics", "dotnet", tab: "Metrics"),
+                ApplicationEntry.Create("Keyboard US", "dotnet", tab: "Productivity"),
+                ApplicationEntry.Create("JiraReport", "dotnet", tab: "Metrics")
+            ]);
+
+        // Act
+        var tabs = options.Tabs.Select(tab => tab.Value).ToArray();
+
+        // Assert
+        tabs.Should().Equal("Metrics", "Productivity");
+    }
+
+    [Fact(DisplayName = "Applications can be filtered by tab.")]
+    [Trait("Category", "Unit")]
+    public void GetApplicationsForTabShouldReturnMatchingApplications()
+    {
+        // Arrange
+        var options = new LauncherOptions(
+            new LayoutOptions(),
+            [
+                ApplicationEntry.Create("JiraMetrics", "dotnet", tab: "Metrics"),
+                ApplicationEntry.Create("Keyboard US", "dotnet", tab: "Productivity")
+            ]);
+
+        // Act
+        var applications = options.GetApplicationsForTab(new ApplicationTab("Metrics"));
+
+        // Assert
+        applications.Should().ContainSingle();
+        applications[0].Name.Value.Should().Be("JiraMetrics");
+    }
+
     private static ApplicationEntry CreateApplication(string name)
         => ApplicationEntry.Create(name, "dotnet");
 }

@@ -47,6 +47,23 @@ public sealed class ApplicationEntryTests
         entry.Arguments.Value.Should().BeEmpty();
         entry.WorkingDirectory.Should().BeNull();
         entry.Description.Value.Should().BeEmpty();
+        entry.Tab.Value.Should().Be(ApplicationTab.DefaultValue);
+    }
+
+    [Fact(DisplayName = "The factory maps the configured tab.")]
+    [Trait("Category", "Unit")]
+    public void CreateShouldMapConfiguredTab()
+    {
+        // Arrange
+
+        // Act
+        var entry = ApplicationEntry.Create(
+            name: "LaunchKit",
+            path: "dotnet",
+            tab: "Metrics");
+
+        // Assert
+        entry.Tab.Value.Should().Be("Metrics");
     }
 
     [Fact(DisplayName = "The factory includes the configuration source when validation fails.")]

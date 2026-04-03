@@ -52,17 +52,24 @@ public sealed class ConsoleRenderer(
                 Height = Dim.Fill(1)
             };
 
-            var summaryLabel = new Label(string.Empty)
+            var tabsLabel = new Label(string.Empty)
             {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill()
             };
 
-            var statusLabel = new Label("Ready")
+            var summaryLabel = new Label(string.Empty)
             {
                 X = 0,
                 Y = 1,
+                Width = Dim.Fill()
+            };
+
+            var statusLabel = new Label("Ready")
+            {
+                X = 0,
+                Y = 2,
                 Width = Dim.Fill()
             };
 
@@ -72,22 +79,25 @@ public sealed class ConsoleRenderer(
                 ReloadOptions)
             {
                 X = 0,
-                Y = 3,
+                Y = 4,
                 Width = Dim.Fill(),
                 Height = Dim.Fill(),
                 CanFocus = true
             };
 
+            gridView.TabChanged += (_, tabs) => tabsLabel.Text = tabs;
             gridView.SelectionChanged += (_, summary) => summaryLabel.Text = summary;
             gridView.StatusChanged += (_, status) => statusLabel.Text = status;
 
+            tabsLabel.Text = gridView.BuildTabStrip();
             summaryLabel.Text = gridView.BuildSummary();
-            statusLabel.Text = "Arrows move  Enter launch  A admin launch  O open folder  F5 reload  Esc exit";
+            statusLabel.Text = "Tab switch  Arrows move  Enter launch  A admin launch  O open folder  F5 reload  Esc exit";
 
-            window.Add(summaryLabel, statusLabel, gridView);
+            window.Add(tabsLabel, summaryLabel, statusLabel, gridView);
             top.Add(window);
 
             using var statusBar = new StatusBar([
+                new StatusItem(Key.Tab, "~Tab~ Next Tab", gridView.NextTab),
                 new StatusItem(Key.Enter, "~Enter~ Launch", gridView.LaunchSelection),
                 new StatusItem(Key.A, "~A~ Admin Launch", gridView.LaunchSelectionAsAdmin),
                 new StatusItem(Key.O, "~O~ Open Folder", gridView.OpenSelectionFolder),

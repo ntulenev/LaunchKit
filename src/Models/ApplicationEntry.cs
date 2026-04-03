@@ -13,18 +13,21 @@ public sealed class ApplicationEntry
     /// <param name="arguments">Optional launch arguments.</param>
     /// <param name="workingDirectory">Optional working directory.</param>
     /// <param name="description">Optional application description.</param>
+    /// <param name="tab">Optional tab/group for the entry.</param>
     public ApplicationEntry(
         ApplicationName name,
         ApplicationPath path,
         LaunchArguments? arguments = null,
         WorkingDirectoryPath? workingDirectory = null,
-        ApplicationDescription? description = null)
+        ApplicationDescription? description = null,
+        ApplicationTab? tab = null)
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         Path = path ?? throw new ArgumentNullException(nameof(path));
         Arguments = arguments ?? new LaunchArguments(null);
         WorkingDirectory = workingDirectory;
         Description = description ?? new ApplicationDescription(null);
+        Tab = tab ?? new ApplicationTab(null);
     }
 
     public ApplicationName Name { get; }
@@ -37,6 +40,8 @@ public sealed class ApplicationEntry
 
     public ApplicationDescription Description { get; }
 
+    public ApplicationTab Tab { get; }
+
     /// <summary>
     /// Creates an application entry from raw configuration values.
     /// </summary>
@@ -46,6 +51,7 @@ public sealed class ApplicationEntry
     /// <param name="workingDirectory">Raw working directory.</param>
     /// <param name="description">Raw description.</param>
     /// <param name="source">Optional configuration path used in error messages.</param>
+    /// <param name="tab">Optional tab/group for the entry.</param>
     /// <returns>A validated immutable application entry.</returns>
     public static ApplicationEntry Create(
         string? name,
@@ -53,7 +59,8 @@ public sealed class ApplicationEntry
         string? arguments = null,
         string? workingDirectory = null,
         string? description = null,
-        string? source = null)
+        string? source = null,
+        string? tab = null)
     {
         try
         {
@@ -62,7 +69,8 @@ public sealed class ApplicationEntry
                 new ApplicationPath(path),
                 new LaunchArguments(arguments),
                 WorkingDirectoryPath.CreateOptional(workingDirectory),
-                new ApplicationDescription(description));
+                new ApplicationDescription(description),
+                new ApplicationTab(tab));
         }
         catch (InvalidDataException exception)
         {

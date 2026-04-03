@@ -25,12 +25,14 @@ public sealed class LauncherConfigurationDocumentTests
             Name = "Editor",
             Path = "code",
             Arguments = ".",
-            Description = "Workspace"
+            Description = "Workspace",
+            Tab = "Productivity"
         });
         document.Applications.Add(new ApplicationEntryDocument
         {
             Name = "Terminal",
-            Path = "pwsh"
+            Path = "pwsh",
+            Tab = "Productivity"
         });
 
         // Act
@@ -46,6 +48,8 @@ public sealed class LauncherConfigurationDocumentTests
         options.Applications[0].Name.Value.Should().Be("Editor");
         options.Applications[0].Arguments.Value.Should().Be(".");
         options.Applications[0].Description.Value.Should().Be("Workspace");
+        options.Applications[0].Tab.Value.Should().Be("Productivity");
         options.Applications[1].Name.Value.Should().Be("Terminal");
+        options.Tabs.Should().ContainSingle(tab => tab.Value == "Productivity");
     }
 }

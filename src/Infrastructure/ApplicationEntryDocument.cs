@@ -17,6 +17,8 @@ public sealed class ApplicationEntryDocument
 
     public string? Description { get; set; }
 
+    public string? Tab { get; set; }
+
     /// <summary>
     /// Converts the mutable configuration document into an immutable application entry.
     /// </summary>
@@ -29,5 +31,6 @@ public sealed class ApplicationEntryDocument
             Arguments,
             WorkingDirectory,
             Description,
-            $"Launcher:Applications:{index}");
+            $"Launcher:Applications:{index}",
+            Tab);
 }

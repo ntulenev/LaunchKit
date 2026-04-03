@@ -49,6 +49,43 @@ public sealed class LauncherGridViewTests
         launcherActions.Verify(actions => actions.LaunchAsAdmin(application), Times.Once);
     }
 
+    [Fact(DisplayName = "The tab strip highlights the active tab.")]
+    [Trait("Category", "Unit")]
+    public void BuildTabStripShouldHighlightActiveTab()
+    {
+        // Arrange
+        var view = CreateView(
+            showFullPath: true,
+            ApplicationEntry.Create("JiraMetrics", "dotnet", tab: "Metrics"),
+            ApplicationEntry.Create("Keyboard US", "dotnet", tab: "Productivity"));
+
+        // Act
+        var tabStrip = view.BuildTabStrip();
+
+        // Assert
+        tabStrip.Should().Be("Tabs: [Metrics]  Productivity");
+    }
+
+    [Fact(DisplayName = "The Tab key switches to the next tab.")]
+    [Trait("Category", "Unit")]
+    public void ProcessKeyShouldSwitchTabsWhenTabIsPressed()
+    {
+        // Arrange
+        var view = CreateView(
+            showFullPath: true,
+            ApplicationEntry.Create("JiraMetrics", "dotnet", tab: "Metrics"),
+            ApplicationEntry.Create("Keyboard US", "dotnet", tab: "Productivity"));
+
+        // Act
+        var handled = view.ProcessKey(new Terminal.Gui.KeyEvent(Terminal.Gui.Key.Tab, new Terminal.Gui.KeyModifiers()));
+
+        // Assert
+        handled.Should().BeTrue();
+        view.BuildTabStrip().Should().Be("Tabs: Metrics  [Productivity]");
+        view.BuildSummary().Should().Contain("Tab: Productivity");
+        view.BuildSummary().Should().Contain("Selected: Keyboard US");
+    }
+
     [Fact(DisplayName = "The grid shows the full path when the option is enabled.")]
     [Trait("Category", "Unit")]
     public void GetPathDisplayTextShouldReturnFullPathWhenConfigured()

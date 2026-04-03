@@ -25,6 +25,11 @@ public sealed class LauncherOptions
 
         Applications = new ReadOnlyCollection<ApplicationEntry>([.. applications]);
         ShowFullPath = showFullPath;
+        Tabs = new ReadOnlyCollection<ApplicationTab>([
+            .. Applications
+                .Select(application => application.Tab)
+                .Distinct()
+        ]);
     }
 
     public LayoutOptions Layout { get; }
@@ -32,6 +37,8 @@ public sealed class LauncherOptions
     public ReadOnlyCollection<ApplicationEntry> Applications { get; }
 
     public bool ShowFullPath { get; }
+
+    public ReadOnlyCollection<ApplicationTab> Tabs { get; }
 
     public int Count => Applications.Count;
 
@@ -43,6 +50,20 @@ public sealed class LauncherOptions
     /// <param name="index">Zero-based application index.</param>
     /// <returns>The requested application entry.</returns>
     public ApplicationEntry GetApplication(int index) => Applications[index];
+
+    /// <summary>
+    /// Gets applications assigned to the specified tab.
+    /// </summary>
+    /// <param name="tab">Tab to filter by.</param>
+    /// <returns>Applications in the requested tab.</returns>
+    public ReadOnlyCollection<ApplicationEntry> GetApplicationsForTab(ApplicationTab tab)
+    {
+        ArgumentNullException.ThrowIfNull(tab);
+
+        return new ReadOnlyCollection<ApplicationEntry>([
+            .. Applications.Where(application => application.Tab == tab)
+        ]);
+    }
 
     /// <summary>
     /// Clamps a selection index to the valid application range.
