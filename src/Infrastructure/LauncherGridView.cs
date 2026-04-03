@@ -72,6 +72,20 @@ internal sealed class LauncherGridView : View
     }
 
     /// <summary>
+    /// Launches the currently selected application entry with administrator privileges.
+    /// </summary>
+    public void LaunchSelectionAsAdmin()
+    {
+        if (!_options.HasApplications)
+        {
+            UpdateStatus("No applications configured.");
+            return;
+        }
+
+        UpdateStatus(_launcherActions.LaunchAsAdmin(_options.GetApplication(_selectedIndex)));
+    }
+
+    /// <summary>
     /// Opens the containing folder for the currently selected application entry.
     /// </summary>
     public void OpenSelectionFolder()
@@ -152,6 +166,11 @@ internal sealed class LauncherGridView : View
 
             case Key.Enter:
                 LaunchSelection();
+                return true;
+
+            case Key.A:
+            case Key.a:
+                LaunchSelectionAsAdmin();
                 return true;
 
             case Key.O:

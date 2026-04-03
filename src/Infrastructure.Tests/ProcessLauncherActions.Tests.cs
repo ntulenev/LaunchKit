@@ -59,6 +59,28 @@ public sealed class ProcessLauncherActionsTests
         starter.StartCalls[0].UseShellExecute.Should().BeTrue();
     }
 
+    [Fact(DisplayName = "The admin launch action starts the process with the runas verb and returns a success message.")]
+    [Trait("Category", "Unit")]
+    public void LaunchAsAdminShouldReturnSuccessMessageWhenProcessStarts()
+    {
+        // Arrange
+        var starter = new FakeProcessStarter();
+        var application = CreateApplication("dotnet", "--info", "C:\\Work");
+        var actions = new ProcessLauncherActions(starter);
+
+        // Act
+        var result = actions.LaunchAsAdmin(application);
+
+        // Assert
+        result.Should().Be("Launched as admin: LaunchKit");
+        starter.StartCalls.Should().HaveCount(1);
+        starter.StartCalls[0].FileName.Should().Be("dotnet");
+        starter.StartCalls[0].Arguments.Should().Be("--info");
+        starter.StartCalls[0].WorkingDirectory.Should().Be("C:\\Work");
+        starter.StartCalls[0].UseShellExecute.Should().BeTrue();
+        starter.StartCalls[0].Verb.Should().Be("runas");
+    }
+
     [Theory(DisplayName = "The launch action returns the exception message when process start fails.")]
     [Trait("Category", "Unit")]
     [InlineData("Win32")]
@@ -78,6 +100,42 @@ public sealed class ProcessLauncherActionsTests
 
         // Assert
         result.Should().Be($"Launch failed: LaunchKit. {exception.Message}");
+    }
+
+    [Fact(DisplayName = "The admin launch action reports that the application path cannot be launched.")]
+    [Trait("Category", "Unit")]
+    public void LaunchAsAdminShouldReturnMessageWhenPathCannotBeLaunched()
+    {
+        // Arrange
+        var actions = new ProcessLauncherActions();
+        var application = CreateApplication(CreateMissingFilePath());
+
+        // Act
+        var result = actions.LaunchAsAdmin(application);
+
+        // Assert
+        result.Should().Be($"Cannot launch as admin: {application.Name.Value}. Path not found.");
+    }
+
+    [Theory(DisplayName = "The admin launch action returns the exception message when process start fails.")]
+    [Trait("Category", "Unit")]
+    [InlineData("Win32")]
+    [InlineData("InvalidOperation")]
+    [InlineData("FileNotFound")]
+    [InlineData("PlatformNotSupported")]
+    public void LaunchAsAdminShouldReturnFailureMessageWhenProcessStartFails(string exceptionKind)
+    {
+        // Arrange
+        var exception = CreateException(exceptionKind);
+        var starter = new FakeProcessStarter { ExceptionToThrow = exception };
+        var application = CreateApplication("dotnet");
+        var actions = new ProcessLauncherActions(starter);
+
+        // Act
+        var result = actions.LaunchAsAdmin(application);
+
+        // Assert
+        result.Should().Be($"Admin launch failed: LaunchKit. {exception.Message}");
     }
 
     [Fact(DisplayName = "The open-folder action throws when the application entry is null.")]

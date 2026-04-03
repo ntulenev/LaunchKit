@@ -35,12 +35,25 @@ public sealed class ProcessLauncherActions : ILauncherActions
     /// <param name="application">Application entry to launch.</param>
     /// <returns>A status message describing the result.</returns>
     public string Launch(ApplicationEntry application)
+        => LaunchInternal(application, runAsAdmin: false);
+
+    /// <summary>
+    /// Launches the specified application entry with administrator privileges.
+    /// </summary>
+    /// <param name="application">Application entry to launch.</param>
+    /// <returns>A status message describing the result.</returns>
+    public string LaunchAsAdmin(ApplicationEntry application)
+        => LaunchInternal(application, runAsAdmin: true);
+
+    private string LaunchInternal(ApplicationEntry application, bool runAsAdmin)
     {
         ArgumentNullException.ThrowIfNull(application);
 
         if (!application.CanLaunch())
         {
-            return $"Cannot launch: {application.Name.Value}. Path not found.";
+            return runAsAdmin
+                ? $"Cannot launch as admin: {application.Name.Value}. Path not found."
+                : $"Cannot launch: {application.Name.Value}. Path not found.";
         }
 
         var startInfo = new ProcessStartInfo
@@ -50,27 +63,41 @@ public sealed class ProcessLauncherActions : ILauncherActions
             WorkingDirectory = ResolveWorkingDirectory(application) ?? string.Empty,
             UseShellExecute = true
         };
+        if (runAsAdmin)
+        {
+            startInfo.Verb = "runas";
+        }
 
         try
         {
             _ = _processStarter.Start(startInfo);
-            return $"Launched: {application.Name.Value}";
+            return runAsAdmin
+                ? $"Launched as admin: {application.Name.Value}"
+                : $"Launched: {application.Name.Value}";
         }
         catch (Win32Exception ex)
         {
-            return $"Launch failed: {application.Name.Value}. {ex.Message}";
+            return runAsAdmin
+                ? $"Admin launch failed: {application.Name.Value}. {ex.Message}"
+                : $"Launch failed: {application.Name.Value}. {ex.Message}";
         }
         catch (InvalidOperationException ex)
         {
-            return $"Launch failed: {application.Name.Value}. {ex.Message}";
+            return runAsAdmin
+                ? $"Admin launch failed: {application.Name.Value}. {ex.Message}"
+                : $"Launch failed: {application.Name.Value}. {ex.Message}";
         }
         catch (FileNotFoundException ex)
         {
-            return $"Launch failed: {application.Name.Value}. {ex.Message}";
+            return runAsAdmin
+                ? $"Admin launch failed: {application.Name.Value}. {ex.Message}"
+                : $"Launch failed: {application.Name.Value}. {ex.Message}";
         }
         catch (PlatformNotSupportedException ex)
         {
-            return $"Launch failed: {application.Name.Value}. {ex.Message}";
+            return runAsAdmin
+                ? $"Admin launch failed: {application.Name.Value}. {ex.Message}"
+                : $"Launch failed: {application.Name.Value}. {ex.Message}";
         }
     }
 

@@ -82,13 +82,14 @@ public sealed class ConsoleRenderer(
             gridView.StatusChanged += (_, status) => statusLabel.Text = status;
 
             summaryLabel.Text = gridView.BuildSummary();
-            statusLabel.Text = "Arrows move  Enter launch  O open folder  F5 reload  Esc exit";
+            statusLabel.Text = "Arrows move  Enter launch  A admin launch  O open folder  F5 reload  Esc exit";
 
             window.Add(summaryLabel, statusLabel, gridView);
             top.Add(window);
 
             using var statusBar = new StatusBar([
                 new StatusItem(Key.Enter, "~Enter~ Launch", gridView.LaunchSelection),
+                new StatusItem(Key.A, "~A~ Admin Launch", gridView.LaunchSelectionAsAdmin),
                 new StatusItem(Key.O, "~O~ Open Folder", gridView.OpenSelectionFolder),
                 new StatusItem(Key.F5, "~F5~ Reload", gridView.ReloadSelection),
                 new StatusItem(Key.Esc, "~Esc~ Exit", () => _terminalFacade.RequestStop())

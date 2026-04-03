@@ -10,6 +10,45 @@ namespace Infrastructure.Tests;
 
 public sealed class LauncherGridViewTests
 {
+    [Fact(DisplayName = "The admin launch action is forwarded for the selected application.")]
+    [Trait("Category", "Unit")]
+    public void LaunchSelectionAsAdminShouldForwardToLauncherActions()
+    {
+        // Arrange
+        var application = ApplicationEntry.Create("JiraMetrics", "dotnet");
+        var launcherActions = new Mock<ILauncherActions>(MockBehavior.Strict);
+        launcherActions
+            .Setup(actions => actions.LaunchAsAdmin(application))
+            .Returns("Launched as admin: JiraMetrics");
+        var view = CreateView(launcherActions.Object, true, application);
+
+        // Act
+        view.LaunchSelectionAsAdmin();
+
+        // Assert
+        launcherActions.Verify(actions => actions.LaunchAsAdmin(application), Times.Once);
+    }
+
+    [Fact(DisplayName = "The A key launches the selected application as admin.")]
+    [Trait("Category", "Unit")]
+    public void ProcessKeyShouldLaunchAsAdminWhenAIsPressed()
+    {
+        // Arrange
+        var application = ApplicationEntry.Create("JiraMetrics", "dotnet");
+        var launcherActions = new Mock<ILauncherActions>(MockBehavior.Strict);
+        launcherActions
+            .Setup(actions => actions.LaunchAsAdmin(application))
+            .Returns("Launched as admin: JiraMetrics");
+        var view = CreateView(launcherActions.Object, true, application);
+
+        // Act
+        var handled = view.ProcessKey(new Terminal.Gui.KeyEvent(Terminal.Gui.Key.A, new Terminal.Gui.KeyModifiers()));
+
+        // Assert
+        handled.Should().BeTrue();
+        launcherActions.Verify(actions => actions.LaunchAsAdmin(application), Times.Once);
+    }
+
     [Fact(DisplayName = "The grid shows the full path when the option is enabled.")]
     [Trait("Category", "Unit")]
     public void GetPathDisplayTextShouldReturnFullPathWhenConfigured()
@@ -45,8 +84,14 @@ public sealed class LauncherGridViewTests
     }
 
     private static LauncherGridView CreateView(bool showFullPath, params ApplicationEntry[] applications)
+        => CreateView(new Mock<ILauncherActions>(MockBehavior.Strict).Object, showFullPath, applications);
+
+    private static LauncherGridView CreateView(
+        ILauncherActions launcherActions,
+        bool showFullPath,
+        params ApplicationEntry[] applications)
         => new(
             new LauncherOptions(new LayoutOptions(), applications, showFullPath),
-            new Mock<ILauncherActions>(MockBehavior.Strict).Object,
+            launcherActions,
             () => new LauncherOptions(new LayoutOptions(), applications, showFullPath));
 }
