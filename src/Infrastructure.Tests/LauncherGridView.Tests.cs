@@ -49,6 +49,46 @@ public sealed class LauncherGridViewTests
         launcherActions.Verify(actions => actions.LaunchAsAdmin(application), Times.Once);
     }
 
+    [Fact(DisplayName = "The Russian A-layout key launches the selected application as admin.")]
+    [Trait("Category", "Unit")]
+    public void ProcessKeyShouldLaunchAsAdminWhenRussianAKeyPositionIsPressed()
+    {
+        // Arrange
+        var application = ApplicationEntry.Create("JiraMetrics", "dotnet");
+        var launcherActions = new Mock<ILauncherActions>(MockBehavior.Strict);
+        launcherActions
+            .Setup(actions => actions.LaunchAsAdmin(application))
+            .Returns("Launched as admin: JiraMetrics");
+        var view = CreateView(launcherActions.Object, true, application);
+
+        // Act
+        var handled = view.ProcessKey(new Terminal.Gui.KeyEvent((Terminal.Gui.Key)'\u0444', new Terminal.Gui.KeyModifiers()));
+
+        // Assert
+        handled.Should().BeTrue();
+        launcherActions.Verify(actions => actions.LaunchAsAdmin(application), Times.Once);
+    }
+
+    [Fact(DisplayName = "The Russian O-layout key opens the selected application folder.")]
+    [Trait("Category", "Unit")]
+    public void ProcessKeyShouldOpenFolderWhenRussianOKeyPositionIsPressed()
+    {
+        // Arrange
+        var application = ApplicationEntry.Create("JiraMetrics", "dotnet");
+        var launcherActions = new Mock<ILauncherActions>(MockBehavior.Strict);
+        launcherActions
+            .Setup(actions => actions.OpenContainingFolder(application))
+            .Returns("Opened folder: JiraMetrics");
+        var view = CreateView(launcherActions.Object, true, application);
+
+        // Act
+        var handled = view.ProcessKey(new Terminal.Gui.KeyEvent((Terminal.Gui.Key)'\u0449', new Terminal.Gui.KeyModifiers()));
+
+        // Assert
+        handled.Should().BeTrue();
+        launcherActions.Verify(actions => actions.OpenContainingFolder(application), Times.Once);
+    }
+
     [Fact(DisplayName = "The tab strip highlights the active tab.")]
     [Trait("Category", "Unit")]
     public void BuildTabStripShouldHighlightActiveTab()
