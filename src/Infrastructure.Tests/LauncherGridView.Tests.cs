@@ -170,5 +170,18 @@ public sealed class LauncherGridViewTests
         => new(
             new LauncherOptions(new LayoutOptions(), applications, showFullPath),
             launcherActions,
-            () => new LauncherOptions(new LayoutOptions(), applications, showFullPath));
+            () => new LauncherOptions(new LayoutOptions(), applications, showFullPath),
+            CreateShortcutResolver());
+
+    private static LauncherShortcutResolver CreateShortcutResolver()
+        => new(new FakeKeyboardState());
+
+    private sealed class FakeKeyboardState : IKeyboardState
+    {
+        public bool IsKeyDown(KeyboardKey key)
+        {
+            _ = key;
+            return false;
+        }
+    }
 }

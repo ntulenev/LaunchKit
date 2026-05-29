@@ -3,7 +3,6 @@ using Abstractions;
 using Models;
 
 using System.Collections.ObjectModel;
-using System.Runtime.InteropServices;
 
 using Terminal.Gui;
 
@@ -24,14 +23,25 @@ internal sealed class LauncherGridView : View
         LauncherOptions options,
         ILauncherActions launcherActions,
         Func<LauncherOptions> reloadOptions)
+        : this(options, launcherActions, reloadOptions, new LauncherShortcutResolver(new WindowsKeyboardState()))
+    {
+    }
+
+    internal LauncherGridView(
+        LauncherOptions options,
+        ILauncherActions launcherActions,
+        Func<LauncherOptions> reloadOptions,
+        ILauncherShortcutResolver shortcutResolver)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(launcherActions);
         ArgumentNullException.ThrowIfNull(reloadOptions);
+        ArgumentNullException.ThrowIfNull(shortcutResolver);
 
         _options = options;
         _launcherActions = launcherActions;
         _reloadOptions = reloadOptions;
+        _shortcutResolver = shortcutResolver;
 
         CanFocus = true;
     }
@@ -229,11 +239,11 @@ internal sealed class LauncherGridView : View
                 OpenSelectionFolder();
                 return true;
 
-            case var key when IsAdminLaunchShortcut(key):
+            case var key when _shortcutResolver.IsAdminLaunchShortcut(key):
                 LaunchSelectionAsAdmin();
                 return true;
 
-            case var key when IsOpenFolderShortcut(key):
+            case var key when _shortcutResolver.IsOpenFolderShortcut(key):
                 OpenSelectionFolder();
                 return true;
 
@@ -479,27 +489,6 @@ internal sealed class LauncherGridView : View
             _ => availability.ToString()
         };
 
-    private static bool IsAdminLaunchShortcut(Key key)
-        => IsShortcutKey(key, '\u0444', '\u0424', VIRTUAL_KEY_A);
-
-    private static bool IsOpenFolderShortcut(Key key)
-        => IsShortcutKey(key, '\u0449', '\u0429', VIRTUAL_KEY_O);
-
-    private static bool IsShortcutKey(Key key, char russianLowerKey, char russianUpperKey, int virtualKey)
-        => key == (Key)russianLowerKey
-           || key == (Key)russianUpperKey
-           || IsWindowsVirtualKeyDown(virtualKey);
-
-    private static bool IsWindowsVirtualKeyDown(int virtualKey)
-        => OperatingSystem.IsWindows()
-           && (GetAsyncKeyState(virtualKey) & KEY_PRESSED_MASK) != 0;
-
-#pragma warning disable SYSLIB1054
-    [DllImport("user32.dll")]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    private static extern short GetAsyncKeyState(int virtualKey);
-#pragma warning restore SYSLIB1054
-
     internal string GetPathDisplayText(ApplicationEntry application)
     {
         ArgumentNullException.ThrowIfNull(application);
@@ -514,11 +503,9 @@ internal sealed class LauncherGridView : View
 
     private readonly ILauncherActions _launcherActions;
     private readonly Func<LauncherOptions> _reloadOptions;
+    private readonly ILauncherShortcutResolver _shortcutResolver;
     private readonly Dictionary<string, int> _selectedIndicesByTab = [];
     private static readonly ReadOnlyCollection<ApplicationEntry> _emptyApplications = new([]);
-    private const int KEY_PRESSED_MASK = 0x8000;
-    private const int VIRTUAL_KEY_A = 0x41;
-    private const int VIRTUAL_KEY_O = 0x4F;
 
     private LauncherOptions _options;
     private int _activeTabIndex;
