@@ -7,16 +7,34 @@ namespace Infrastructure;
 /// </summary>
 public sealed class ApplicationEntryDocument
 {
+    /// <summary>
+    /// Gets or sets the raw application name.
+    /// </summary>
     public string? Name { get; set; }
 
+    /// <summary>
+    /// Gets or sets the raw launch target path or command.
+    /// </summary>
     public string? Path { get; set; }
 
+    /// <summary>
+    /// Gets or sets the raw launch arguments.
+    /// </summary>
     public string? Arguments { get; set; }
 
+    /// <summary>
+    /// Gets or sets the raw working directory path.
+    /// </summary>
     public string? WorkingDirectory { get; set; }
 
+    /// <summary>
+    /// Gets or sets the raw application description.
+    /// </summary>
     public string? Description { get; set; }
 
+    /// <summary>
+    /// Gets or sets the raw tab/group name.
+    /// </summary>
     public string? Tab { get; set; }
 
     /// <summary>
