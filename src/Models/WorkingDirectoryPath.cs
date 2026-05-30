@@ -14,6 +14,9 @@ public sealed record WorkingDirectoryPath
         Value = Normalize(value);
     }
 
+    /// <summary>
+    /// Gets the normalized working directory path.
+    /// </summary>
     public string Value { get; }
 
     /// <summary>
@@ -26,8 +29,14 @@ public sealed record WorkingDirectoryPath
             ? null
             : new WorkingDirectoryPath(value);
 
+    /// <summary>
+    /// Gets the process working directory path.
+    /// </summary>
     public string ProcessWorkingDirectory => Value;
 
+    /// <summary>
+    /// Gets the containing folder when the working directory exists.
+    /// </summary>
     public string? ContainingFolder
         => Directory.Exists(Value)
             ? Value
