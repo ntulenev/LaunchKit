@@ -32,16 +32,34 @@ public sealed class LauncherOptions
         ]);
     }
 
+    /// <summary>
+    /// Gets the configured layout options.
+    /// </summary>
     public LayoutOptions Layout { get; }
 
+    /// <summary>
+    /// Gets the configured application entries.
+    /// </summary>
     public ReadOnlyCollection<ApplicationEntry> Applications { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether tiles show full paths instead of compact display names.
+    /// </summary>
     public bool ShowFullPath { get; }
 
+    /// <summary>
+    /// Gets the configured tabs in first-seen application order.
+    /// </summary>
     public ReadOnlyCollection<ApplicationTab> Tabs { get; }
 
+    /// <summary>
+    /// Gets the number of configured application entries.
+    /// </summary>
     public int Count => Applications.Count;
 
+    /// <summary>
+    /// Gets a value indicating whether any application entries are configured.
+    /// </summary>
     public bool HasApplications => Count > 0;
 
     /// <summary>
