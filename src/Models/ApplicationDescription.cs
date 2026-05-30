@@ -16,8 +16,14 @@ public sealed record ApplicationDescription
             : value.Trim();
     }
 
+    /// <summary>
+    /// Gets the normalized description text.
+    /// </summary>
     public string Value { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether description text is present.
+    /// </summary>
     public bool HasValue => Value.Length > 0;
 
     /// <summary>
