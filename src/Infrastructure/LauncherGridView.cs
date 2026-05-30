@@ -2,8 +2,6 @@ using Abstractions;
 
 using Models;
 
-using System.Collections.ObjectModel;
-
 using Terminal.Gui;
 
 namespace Infrastructure;
@@ -38,7 +36,7 @@ internal sealed class LauncherGridView : View
         ArgumentNullException.ThrowIfNull(reloadOptions);
         ArgumentNullException.ThrowIfNull(shortcutResolver);
 
-        _options = options;
+        _state = new LauncherGridState(options);
         _launcherActions = launcherActions;
         _reloadOptions = reloadOptions;
         _shortcutResolver = shortcutResolver;
@@ -58,32 +56,32 @@ internal sealed class LauncherGridView : View
     /// <returns>A summary line describing the grid state.</returns>
     public string BuildSummary()
     {
-        if (!_options.HasApplications)
+        if (!_state.Options.HasApplications)
         {
             return "Items: 0  Page: 1/1  Columns: 1  Selected: none";
         }
 
-        var applications = GetActiveApplications();
+        var applications = _state.ActiveApplications;
         var layout = BuildLayoutState();
-        var selectedIndex = GetSelectedIndex();
+        var selectedIndex = _state.SelectedIndex;
         var pages = layout.CalculatePages(applications.Count);
         var currentPage = layout.GetPage(selectedIndex);
         var selectedName = applications[selectedIndex].Name.Value;
-        var activeTab = GetActiveTab().Value;
+        var activeTab = _state.ActiveTab.Value;
 
-        return $"Tab: {activeTab}  Items: {applications.Count}/{_options.Count}  Page: {currentPage + 1}/{pages}  " +
+        return $"Tab: {activeTab}  Items: {applications.Count}/{_state.Options.Count}  Page: {currentPage + 1}/{pages}  " +
                $"Columns: {layout.Columns}  Selected: {selectedName}";
     }
 
     public string BuildTabStrip()
     {
-        if (_options.Tabs.Count == 0)
+        if (_state.Options.Tabs.Count == 0)
         {
             return "Tabs: none";
         }
 
-        return "Tabs: " + string.Join("  ", _options.Tabs.Select((tab, index) =>
-            index == _activeTabIndex
+        return "Tabs: " + string.Join("  ", _state.Options.Tabs.Select(tab =>
+            tab == _state.ActiveTab
                 ? $"[{tab.Value}]"
                 : tab.Value));
     }
@@ -93,7 +91,7 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public void LaunchSelection()
     {
-        var application = GetSelectedApplication();
+        var application = _state.SelectedApplication;
         if (application is null)
         {
             UpdateStatus("No applications configured.");
@@ -108,7 +106,7 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public void LaunchSelectionAsAdmin()
     {
-        var application = GetSelectedApplication();
+        var application = _state.SelectedApplication;
         if (application is null)
         {
             UpdateStatus("No applications configured.");
@@ -123,7 +121,7 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public void OpenSelectionFolder()
     {
-        var application = GetSelectedApplication();
+        var application = _state.SelectedApplication;
         if (application is null)
         {
             UpdateStatus("No applications configured.");
@@ -138,15 +136,14 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public void NextTab()
     {
-        if (_options.Tabs.Count <= 1)
+        if (!_state.NextTab())
         {
             return;
         }
 
-        _activeTabIndex = (_activeTabIndex + 1) % _options.Tabs.Count;
         NotifyTabChanged();
         NotifySelectionChanged();
-        UpdateStatus($"Tab: {GetActiveTab().Value}");
+        UpdateStatus($"Tab: {_state.ActiveTab.Value}");
     }
 
     /// <summary>
@@ -156,14 +153,7 @@ internal sealed class LauncherGridView : View
     {
         try
         {
-            var activeTabName = _options.Tabs.Count > 0
-                ? GetActiveTab().Value
-                : null;
-
-            _options = _reloadOptions();
-            PruneSelectionCache();
-            RestoreActiveTab(activeTabName);
-            _ = GetSelectedIndex();
+            _state.Reload(_reloadOptions());
 
             UpdateStatus("Configuration reloaded.");
             NotifyTabChanged();
@@ -214,7 +204,7 @@ internal sealed class LauncherGridView : View
                 return true;
 
             case Key.End:
-                SetSelection(GetActiveApplications().Count - 1);
+                SetSelection(_state.ActiveApplications.Count - 1);
                 return true;
 
             case Key.PageUp:
@@ -269,14 +259,14 @@ internal sealed class LauncherGridView : View
         Driver.SetAttribute(ColorScheme.Normal);
         Clear();
 
-        var applications = GetActiveApplications();
+        var applications = _state.ActiveApplications;
         if (applications.Count == 0)
         {
             return;
         }
 
         var layout = BuildLayoutState();
-        var selectedIndex = GetSelectedIndex();
+        var selectedIndex = _state.SelectedIndex;
         var currentPage = layout.GetPage(selectedIndex);
         var firstIndex = layout.GetFirstIndexForPage(currentPage);
         var lastIndexExclusive = Math.Min(firstIndex + layout.ItemsPerPage, applications.Count);
@@ -298,14 +288,14 @@ internal sealed class LauncherGridView : View
     /// </summary>
     public override void PositionCursor()
     {
-        var applications = GetActiveApplications();
+        var applications = _state.ActiveApplications;
         if (applications.Count == 0)
         {
             return;
         }
 
         var layout = BuildLayoutState();
-        var pageOffset = layout.GetPageOffset(GetSelectedIndex());
+        var pageOffset = layout.GetPageOffset(_state.SelectedIndex);
         var row = layout.GetRow(pageOffset);
         var column = layout.GetColumn(pageOffset);
         var x = layout.GetTileX(column) + 1;
@@ -364,102 +354,17 @@ internal sealed class LauncherGridView : View
         Driver.AddStr(text);
     }
 
-    private void MoveSelection(int delta) => SetSelection(GetSelectedIndex() + delta);
+    private void MoveSelection(int delta) => SetSelection(_state.SelectedIndex + delta);
 
     private void SetSelection(int index)
     {
-        var applications = GetActiveApplications();
-        if (applications.Count == 0)
+        if (!_state.SetSelection(index))
         {
             return;
         }
 
-        var tab = GetActiveTab().Value;
-        var clamped = Math.Clamp(index, 0, applications.Count - 1);
-        if (_selectedIndicesByTab.TryGetValue(tab, out var existing) && existing == clamped)
-        {
-            return;
-        }
-
-        _selectedIndicesByTab[tab] = clamped;
         NotifySelectionChanged();
         SetNeedsDisplay();
-    }
-
-    private ApplicationEntry? GetSelectedApplication()
-    {
-        var applications = GetActiveApplications();
-        return applications.Count == 0
-            ? null
-            : applications[GetSelectedIndex()];
-    }
-
-    private int GetSelectedIndex()
-    {
-        var applications = GetActiveApplications();
-        if (applications.Count == 0)
-        {
-            return 0;
-        }
-
-        var tab = GetActiveTab().Value;
-        _ = _selectedIndicesByTab.TryGetValue(tab, out var index);
-        var clamped = Math.Clamp(index, 0, applications.Count - 1);
-        _selectedIndicesByTab[tab] = clamped;
-
-        return clamped;
-    }
-
-    private ApplicationTab GetActiveTab()
-    {
-        _activeTabIndex = _options.Tabs.Count == 0
-            ? 0
-            : Math.Clamp(_activeTabIndex, 0, _options.Tabs.Count - 1);
-
-        return _options.Tabs.Count == 0
-            ? new ApplicationTab(null)
-            : _options.Tabs[_activeTabIndex];
-    }
-
-    private ReadOnlyCollection<ApplicationEntry> GetActiveApplications()
-        => _options.Tabs.Count == 0
-            ? _emptyApplications
-            : _options.GetApplicationsForTab(GetActiveTab());
-
-    private void RestoreActiveTab(string? activeTabName)
-    {
-        if (_options.Tabs.Count == 0)
-        {
-            _activeTabIndex = 0;
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(activeTabName))
-        {
-            _activeTabIndex = 0;
-            return;
-        }
-
-        var matchingIndex = _options.Tabs
-            .Select((tab, index) => new { tab, index })
-            .FirstOrDefault(item => string.Equals(item.tab.Value, activeTabName, StringComparison.Ordinal));
-
-        _activeTabIndex = matchingIndex?.index ?? 0;
-    }
-
-    private void PruneSelectionCache()
-    {
-        var validTabs = _options.Tabs
-            .Select(tab => tab.Value)
-            .ToHashSet(StringComparer.Ordinal);
-        var staleTabs = _selectedIndicesByTab.Keys
-            .Where(key => !validTabs.Contains(key))
-            .ToArray();
-
-        foreach (var staleTab in staleTabs)
-        {
-            _ = _selectedIndicesByTab.Remove(staleTab);
-        }
     }
 
     private void NotifySelectionChanged() => SelectionChanged?.Invoke(this, BuildSummary());
@@ -493,20 +398,17 @@ internal sealed class LauncherGridView : View
     {
         ArgumentNullException.ThrowIfNull(application);
 
-        return _options.ShowFullPath
+        return _state.Options.ShowFullPath
             ? application.Path.Value
             : application.Path.GetDisplayName();
     }
 
     private LayoutState BuildLayoutState()
-        => _options.Layout.CalculateState(Bounds.Width, Bounds.Height, GetActiveApplications().Count);
+        => _state.CreateLayoutState(Bounds.Width, Bounds.Height);
 
     private readonly ILauncherActions _launcherActions;
     private readonly Func<LauncherOptions> _reloadOptions;
     private readonly ILauncherShortcutResolver _shortcutResolver;
-    private readonly Dictionary<string, int> _selectedIndicesByTab = [];
-    private static readonly ReadOnlyCollection<ApplicationEntry> _emptyApplications = new([]);
+    private readonly LauncherGridState _state;
 
-    private LauncherOptions _options;
-    private int _activeTabIndex;
 }
