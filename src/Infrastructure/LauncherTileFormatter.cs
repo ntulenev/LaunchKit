@@ -5,9 +5,10 @@ namespace Infrastructure;
 /// <summary>
 /// Formats launcher grid text independently from Terminal.Gui rendering.
 /// </summary>
-internal static class LauncherTileFormatter
+internal sealed class LauncherTileFormatter : ILauncherTileFormatter
 {
-    public static string BuildSummary(LauncherGridState state, LayoutState layout)
+    /// <inheritdoc />
+    public string BuildSummary(ILauncherGridState state, LayoutState layout)
     {
         ArgumentNullException.ThrowIfNull(state);
         ArgumentNullException.ThrowIfNull(layout);
@@ -28,7 +29,8 @@ internal static class LauncherTileFormatter
                $"Columns: {layout.Columns}  Selected: {selectedName}";
     }
 
-    public static string BuildTabStrip(LauncherGridState state)
+    /// <inheritdoc />
+    public string BuildTabStrip(ILauncherGridState state)
     {
         ArgumentNullException.ThrowIfNull(state);
 
@@ -43,7 +45,8 @@ internal static class LauncherTileFormatter
                 : tab.Value));
     }
 
-    public static string GetPathDisplayText(LauncherOptions options, ApplicationEntry application)
+    /// <inheritdoc />
+    public string GetPathDisplayText(LauncherOptions options, ApplicationEntry application)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(application);
@@ -53,7 +56,8 @@ internal static class LauncherTileFormatter
             : application.Path.GetDisplayName();
     }
 
-    public static string Clip(string value, int width)
+    /// <inheritdoc />
+    public string Clip(string value, int width)
     {
         return string.IsNullOrEmpty(value) || value.Length <= width
             ? value
@@ -62,7 +66,8 @@ internal static class LauncherTileFormatter
             : $"{value[..(width - 3)]}...";
     }
 
-    public static string FormatAvailability(ApplicationAvailability availability)
+    /// <inheritdoc />
+    public string FormatAvailability(ApplicationAvailability availability)
         => availability switch
         {
             ApplicationAvailability.Ready => "Ready",

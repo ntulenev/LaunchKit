@@ -7,10 +7,16 @@ namespace Infrastructure;
 /// <summary>
 /// Handles launcher grid commands independently from Terminal.Gui input and rendering.
 /// </summary>
-internal sealed class LauncherGridController
+internal sealed class LauncherGridController : ILauncherGridController
 {
+    /// <summary>
+    /// Initializes a launcher grid controller.
+    /// </summary>
+    /// <param name="state">State controlled by the controller.</param>
+    /// <param name="launcherActions">Actions available for launcher entries.</param>
+    /// <param name="reloadOptions">Delegate used to reload launcher options.</param>
     public LauncherGridController(
-        LauncherGridState state,
+        ILauncherGridState state,
         ILauncherActions launcherActions,
         Func<LauncherOptions> reloadOptions)
     {
@@ -19,6 +25,7 @@ internal sealed class LauncherGridController
         _reloadOptions = reloadOptions ?? throw new ArgumentNullException(nameof(reloadOptions));
     }
 
+    /// <inheritdoc />
     public LauncherGridUpdate LaunchSelection()
     {
         var application = _state.SelectedApplication;
@@ -27,6 +34,7 @@ internal sealed class LauncherGridController
             : Status(_launcherActions.Launch(application));
     }
 
+    /// <inheritdoc />
     public LauncherGridUpdate LaunchSelectionAsAdmin()
     {
         var application = _state.SelectedApplication;
@@ -35,6 +43,7 @@ internal sealed class LauncherGridController
             : Status(_launcherActions.LaunchAsAdmin(application));
     }
 
+    /// <inheritdoc />
     public LauncherGridUpdate OpenSelectionFolder()
     {
         var application = _state.SelectedApplication;
@@ -43,13 +52,15 @@ internal sealed class LauncherGridController
             : Status(_launcherActions.OpenContainingFolder(application));
     }
 
+    /// <inheritdoc />
     public LauncherGridUpdate NextTab()
     {
         return !_state.NextTab()
             ? LauncherGridUpdate.None
-            : new LauncherGridUpdate($"Tab: {_state.ActiveTab.Value}", SelectionChanged: true, TabChanged: true, NeedsDisplay: true);
+            : new LauncherGridUpdate($"Tab: {_state.ActiveTab.Value}", true, true, true);
     }
 
+    /// <inheritdoc />
     public LauncherGridUpdate ReloadSelection()
     {
         try
@@ -58,9 +69,9 @@ internal sealed class LauncherGridController
 
             return new LauncherGridUpdate(
                 "Configuration reloaded.",
-                SelectionChanged: true,
-                TabChanged: true,
-                NeedsDisplay: true);
+                true,
+                true,
+                true);
         }
         catch (Exception ex) when (
             ex is FileNotFoundException
@@ -72,18 +83,20 @@ internal sealed class LauncherGridController
         }
     }
 
+    /// <inheritdoc />
     public LauncherGridUpdate MoveSelection(int delta)
         => SetSelection(_state.SelectedIndex + delta);
 
+    /// <inheritdoc />
     public LauncherGridUpdate SetSelection(int index)
         => !_state.SetSelection(index)
             ? LauncherGridUpdate.None
-            : new LauncherGridUpdate(null, SelectionChanged: true, TabChanged: false, NeedsDisplay: true);
+            : new LauncherGridUpdate(null, true, false, true);
 
     private static LauncherGridUpdate Status(string status)
-        => new(status, SelectionChanged: false, TabChanged: false, NeedsDisplay: true);
+        => new(status, false, false, true);
 
-    private readonly LauncherGridState _state;
+    private readonly ILauncherGridState _state;
     private readonly ILauncherActions _launcherActions;
     private readonly Func<LauncherOptions> _reloadOptions;
 }

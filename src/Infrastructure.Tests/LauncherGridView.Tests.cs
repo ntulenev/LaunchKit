@@ -2,9 +2,9 @@ using Abstractions;
 
 using FluentAssertions;
 
-using Moq;
-
 using Models;
+
+using Moq;
 
 namespace Infrastructure.Tests;
 
@@ -167,11 +167,20 @@ public sealed class LauncherGridViewTests
         ILauncherActions launcherActions,
         bool showFullPath,
         params ApplicationEntry[] applications)
-        => new(
-            new LauncherOptions(new LayoutOptions(), applications, showFullPath),
+    {
+        var options = new LauncherOptions(new LayoutOptions(), applications, showFullPath);
+        var state = new LauncherGridState(options);
+        var controller = new LauncherGridController(
+            state,
             launcherActions,
-            () => new LauncherOptions(new LayoutOptions(), applications, showFullPath),
-            CreateShortcutResolver());
+            () => new LauncherOptions(new LayoutOptions(), applications, showFullPath));
+
+        return new LauncherGridView(
+            state,
+            controller,
+            CreateShortcutResolver(),
+            new LauncherTileFormatter());
+    }
 
     private static LauncherShortcutResolver CreateShortcutResolver()
         => new(new FakeKeyboardState());

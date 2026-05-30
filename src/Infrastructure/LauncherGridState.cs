@@ -7,15 +7,21 @@ namespace Infrastructure;
 /// <summary>
 /// Tracks launcher grid tab and selection state independently from Terminal.Gui.
 /// </summary>
-internal sealed class LauncherGridState
+internal sealed class LauncherGridState : ILauncherGridState
 {
+    /// <summary>
+    /// Initializes a new grid state for launcher options.
+    /// </summary>
+    /// <param name="options">Launcher options to track.</param>
     public LauncherGridState(LauncherOptions options)
     {
         Options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
+    /// <inheritdoc />
     public LauncherOptions Options { get; private set; }
 
+    /// <inheritdoc />
     public ApplicationTab ActiveTab {
         get
         {
@@ -27,16 +33,19 @@ internal sealed class LauncherGridState
         }
     }
 
+    /// <inheritdoc />
     public ReadOnlyCollection<ApplicationEntry> ActiveApplications
         => Options.Tabs.Count == 0
             ? _emptyApplications
             : Options.GetApplicationsForTab(ActiveTab);
 
+    /// <inheritdoc />
     public ApplicationEntry? SelectedApplication
         => ActiveApplications.Count == 0
             ? null
             : ActiveApplications[SelectedIndex];
 
+    /// <inheritdoc />
     public int SelectedIndex {
         get
         {
@@ -55,8 +64,10 @@ internal sealed class LauncherGridState
         }
     }
 
+    /// <inheritdoc />
     public bool MoveSelection(int delta) => SetSelection(SelectedIndex + delta);
 
+    /// <inheritdoc />
     public bool SetSelection(int index)
     {
         var applications = ActiveApplications;
@@ -76,6 +87,7 @@ internal sealed class LauncherGridState
         return true;
     }
 
+    /// <inheritdoc />
     public bool NextTab()
     {
         if (Options.Tabs.Count <= 1)
@@ -87,6 +99,7 @@ internal sealed class LauncherGridState
         return true;
     }
 
+    /// <inheritdoc />
     public void Reload(LauncherOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -101,6 +114,7 @@ internal sealed class LauncherGridState
         _ = SelectedIndex;
     }
 
+    /// <inheritdoc />
     public LayoutState CreateLayoutState(int availableWidth, int availableHeight)
         => Options.Layout.CalculateState(availableWidth, availableHeight, ActiveApplications.Count);
 

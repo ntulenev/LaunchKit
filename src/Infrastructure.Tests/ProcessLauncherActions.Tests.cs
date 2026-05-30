@@ -14,7 +14,7 @@ public sealed class ProcessLauncherActionsTests
     public void LaunchShouldThrowWhenApplicationIsNull()
     {
         // Arrange
-        var actions = new ProcessLauncherActions();
+        var actions = new ProcessLauncherActions(new FakeProcessStarter());
 
         // Act
         var action = () => actions.Launch(null!);
@@ -28,7 +28,7 @@ public sealed class ProcessLauncherActionsTests
     public void LaunchShouldReturnMessageWhenPathCannotBeLaunched()
     {
         // Arrange
-        var actions = new ProcessLauncherActions();
+        var actions = new ProcessLauncherActions(new FakeProcessStarter());
         var application = CreateApplication(CreateMissingFilePath());
 
         // Act
@@ -107,7 +107,7 @@ public sealed class ProcessLauncherActionsTests
     public void LaunchAsAdminShouldReturnMessageWhenPathCannotBeLaunched()
     {
         // Arrange
-        var actions = new ProcessLauncherActions();
+        var actions = new ProcessLauncherActions(new FakeProcessStarter());
         var application = CreateApplication(CreateMissingFilePath());
 
         // Act
@@ -143,7 +143,7 @@ public sealed class ProcessLauncherActionsTests
     public void OpenContainingFolderShouldThrowWhenApplicationIsNull()
     {
         // Arrange
-        var actions = new ProcessLauncherActions();
+        var actions = new ProcessLauncherActions(new FakeProcessStarter());
 
         // Act
         var action = () => actions.OpenContainingFolder(null!);
@@ -157,7 +157,7 @@ public sealed class ProcessLauncherActionsTests
     public void OpenContainingFolderShouldReturnMessageWhenFolderIsMissing()
     {
         // Arrange
-        var actions = new ProcessLauncherActions();
+        var actions = new ProcessLauncherActions(new FakeProcessStarter());
         var application = CreateApplication(CreateMissingFilePath());
 
         // Act
@@ -172,7 +172,7 @@ public sealed class ProcessLauncherActionsTests
     public void OpenContainingFolderShouldReturnSuccessMessageWhenFolderOpens()
     {
         // Arrange
-        var directoryPath = Path.GetDirectoryName(typeof(ProcessLauncherActionsTests).Assembly.Location)!;
+        var directoryPath = Path.GetDirectoryName(typeof(ProcessLauncherActionsTests).Assembly.Location);
         var starter = new FakeProcessStarter();
         var application = CreateApplication("dotnet", workingDirectory: directoryPath);
         var actions = new ProcessLauncherActions(starter);
@@ -197,7 +197,7 @@ public sealed class ProcessLauncherActionsTests
     {
         // Arrange
         var exception = CreateException(exceptionKind);
-        var directoryPath = Path.GetDirectoryName(typeof(ProcessLauncherActionsTests).Assembly.Location)!;
+        var directoryPath = Path.GetDirectoryName(typeof(ProcessLauncherActionsTests).Assembly.Location);
         var starter = new FakeProcessStarter { ExceptionToThrow = exception };
         var application = CreateApplication("dotnet", workingDirectory: directoryPath);
         var actions = new ProcessLauncherActions(starter);

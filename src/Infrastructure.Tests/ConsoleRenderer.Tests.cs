@@ -2,9 +2,9 @@ using Abstractions;
 
 using FluentAssertions;
 
-using Moq;
-
 using Models;
+
+using Moq;
 
 using Terminal.Gui;
 
@@ -12,29 +12,31 @@ namespace Infrastructure.Tests;
 
 public sealed class ConsoleRendererTests
 {
-    [Fact(DisplayName = "The constructor throws when the launcher actions are null.")]
-    [Trait("Category", "Unit")]
-    public void CtorShouldThrowWhenLauncherActionsAreNull()
-    {
-        // Arrange
-        var configuration = new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object;
-
-        // Act
-        var action = () => new ConsoleRenderer(null!, configuration);
-
-        // Assert
-        action.Should().Throw<ArgumentNullException>();
-    }
-
     [Fact(DisplayName = "The constructor throws when the launcher configuration is null.")]
     [Trait("Category", "Unit")]
     public void CtorShouldThrowWhenLauncherConfigurationIsNull()
     {
         // Arrange
-        var actions = new Mock<ILauncherActions>(MockBehavior.Strict).Object;
+        var factory = new FakeGridViewFactory();
+        var terminal = new FakeTerminalFacade();
 
         // Act
-        var action = () => new ConsoleRenderer(actions, null!);
+        var action = () => new ConsoleRenderer(null!, factory, terminal);
+
+        // Assert
+        action.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact(DisplayName = "The constructor throws when the grid view factory is null.")]
+    [Trait("Category", "Unit")]
+    public void CtorShouldThrowWhenGridViewFactoryIsNull()
+    {
+        // Arrange
+        var configuration = new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object;
+        var terminal = new FakeTerminalFacade();
+
+        // Act
+        var action = () => new ConsoleRenderer(configuration, null!, terminal);
 
         // Assert
         action.Should().Throw<ArgumentNullException>();
@@ -45,11 +47,11 @@ public sealed class ConsoleRendererTests
     public void CtorShouldThrowWhenTerminalFacadeIsNull()
     {
         // Arrange
-        var actions = new Mock<ILauncherActions>(MockBehavior.Strict).Object;
         var configuration = new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object;
+        var factory = new FakeGridViewFactory();
 
         // Act
-        var action = () => new ConsoleRenderer(actions, configuration, null!);
+        var action = () => new ConsoleRenderer(configuration, factory, null!);
 
         // Assert
         action.Should().Throw<ArgumentNullException>();
@@ -60,10 +62,7 @@ public sealed class ConsoleRendererTests
     public async Task RunAsyncShouldThrowWhenOptionsAreNull()
     {
         // Arrange
-        var renderer = new ConsoleRenderer(
-            new Mock<ILauncherActions>(MockBehavior.Strict).Object,
-            new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object,
-            new FakeTerminalFacade());
+        var renderer = CreateRenderer(new FakeTerminalFacade());
 
         // Act
         Func<Task> action = () => renderer.RunAsync(null!, CancellationToken.None);
@@ -78,10 +77,7 @@ public sealed class ConsoleRendererTests
     {
         // Arrange
         var terminal = new FakeTerminalFacade();
-        var renderer = new ConsoleRenderer(
-            new Mock<ILauncherActions>(MockBehavior.Strict).Object,
-            new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object,
-            terminal);
+        var renderer = CreateRenderer(terminal);
         var options = CreateOptions(CreateApplication());
 
         // Act
@@ -102,10 +98,7 @@ public sealed class ConsoleRendererTests
         using var cts = new CancellationTokenSource();
         cts.Cancel();
         var terminal = new FakeTerminalFacade();
-        var renderer = new ConsoleRenderer(
-            new Mock<ILauncherActions>(MockBehavior.Strict).Object,
-            new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object,
-            terminal);
+        var renderer = CreateRenderer(terminal);
         var options = CreateOptions(CreateApplication());
 
         // Act
@@ -124,10 +117,7 @@ public sealed class ConsoleRendererTests
         {
             RunException = new InvalidOperationException("Boom")
         };
-        var renderer = new ConsoleRenderer(
-            new Mock<ILauncherActions>(MockBehavior.Strict).Object,
-            new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object,
-            terminal);
+        var renderer = CreateRenderer(terminal);
         var options = CreateOptions(CreateApplication());
 
         // Act
@@ -141,6 +131,12 @@ public sealed class ConsoleRendererTests
 
     private static LauncherOptions CreateOptions(params ApplicationEntry[] applications)
         => new(new LayoutOptions(), applications);
+
+    private static ConsoleRenderer CreateRenderer(FakeTerminalFacade terminal)
+        => new(
+            new Mock<ILauncherConfiguration>(MockBehavior.Strict).Object,
+            new FakeGridViewFactory(),
+            terminal);
 
     private static ApplicationEntry CreateApplication()
         => ApplicationEntry.Create(
@@ -177,5 +173,30 @@ public sealed class ConsoleRendererTests
         public void Shutdown() => ShutdownCalls++;
 
         public void RequestStop() => RequestStopCalls++;
+    }
+
+    private sealed class FakeGridViewFactory : ILauncherGridViewFactory
+    {
+        public LauncherGridView Create(LauncherOptions options, Func<LauncherOptions> reloadOptions)
+        {
+            var state = new LauncherGridState(options);
+            var actions = new Mock<ILauncherActions>(MockBehavior.Loose).Object;
+            var controller = new LauncherGridController(state, actions, reloadOptions);
+
+            return new LauncherGridView(
+                state,
+                controller,
+                new LauncherShortcutResolver(new FakeKeyboardState()),
+                new LauncherTileFormatter());
+        }
+    }
+
+    private sealed class FakeKeyboardState : IKeyboardState
+    {
+        public bool IsKeyDown(KeyboardKey key)
+        {
+            _ = key;
+            return false;
+        }
     }
 }

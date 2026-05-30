@@ -22,14 +22,6 @@ public sealed class ProcessLauncherActions : ILauncherActions
     }
 
     /// <summary>
-    /// Initializes launcher actions that use the default process starter.
-    /// </summary>
-    public ProcessLauncherActions()
-        : this(new ProcessStarter())
-    {
-    }
-
-    /// <summary>
     /// Launches the specified application entry.
     /// </summary>
     /// <param name="application">Application entry to launch.</param>

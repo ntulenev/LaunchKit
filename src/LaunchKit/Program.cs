@@ -16,9 +16,7 @@ var builder = Host.CreateDefaultBuilder()
     {
         _ = hostContext;
         _ = services.AddSingleton<IApplication, Application>();
-        _ = services.AddSingleton<ILauncherConfiguration, JsonLauncherConfiguration>();
-        _ = services.AddSingleton<ILauncherActions, ProcessLauncherActions>();
-        _ = services.AddSingleton<IConsoleRenderer, ConsoleRenderer>();
+        _ = services.AddLaunchKitInfrastructure();
         _ = services.AddSingleton<ILauncherWorkflow, LauncherWorkflow>();
     });
 

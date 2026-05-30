@@ -1,5 +1,3 @@
-using Abstractions;
-
 using Models;
 
 using Terminal.Gui;
@@ -12,41 +10,39 @@ namespace Infrastructure;
 internal sealed class LauncherGridView : View
 {
     /// <summary>
-    /// Initializes a new grid view for launcher entries.
+    /// Initializes a launcher grid view.
     /// </summary>
-    /// <param name="options">Initial launcher options to display.</param>
-    /// <param name="launcherActions">Actions available for the selected entry.</param>
-    /// <param name="reloadOptions">Delegate that reloads the launcher configuration.</param>
-    public LauncherGridView(
-        LauncherOptions options,
-        ILauncherActions launcherActions,
-        Func<LauncherOptions> reloadOptions)
-        : this(options, launcherActions, reloadOptions, new LauncherShortcutResolver(new WindowsKeyboardState()))
-    {
-    }
-
+    /// <param name="state">Grid state used by the view.</param>
+    /// <param name="controller">Controller used to execute grid commands.</param>
+    /// <param name="shortcutResolver">Shortcut resolver used for alternate keyboard layouts.</param>
+    /// <param name="tileFormatter">Formatter used to create grid display text.</param>
     internal LauncherGridView(
-        LauncherOptions options,
-        ILauncherActions launcherActions,
-        Func<LauncherOptions> reloadOptions,
-        ILauncherShortcutResolver shortcutResolver)
+        ILauncherGridState state,
+        ILauncherGridController controller,
+        ILauncherShortcutResolver shortcutResolver,
+        ILauncherTileFormatter tileFormatter)
     {
-        ArgumentNullException.ThrowIfNull(options);
-        ArgumentNullException.ThrowIfNull(launcherActions);
-        ArgumentNullException.ThrowIfNull(reloadOptions);
-        ArgumentNullException.ThrowIfNull(shortcutResolver);
-
-        _state = new LauncherGridState(options);
-        _controller = new LauncherGridController(_state, launcherActions, reloadOptions);
-        _shortcutResolver = shortcutResolver;
+        _state = state ?? throw new ArgumentNullException(nameof(state));
+        _controller = controller ?? throw new ArgumentNullException(nameof(controller));
+        _shortcutResolver = shortcutResolver ?? throw new ArgumentNullException(nameof(shortcutResolver));
+        _tileFormatter = tileFormatter ?? throw new ArgumentNullException(nameof(tileFormatter));
 
         CanFocus = true;
     }
 
+    /// <summary>
+    /// Raised when the selected application changes.
+    /// </summary>
     public event EventHandler<string>? SelectionChanged;
 
+    /// <summary>
+    /// Raised when a launcher status message changes.
+    /// </summary>
     public event EventHandler<string>? StatusChanged;
 
+    /// <summary>
+    /// Raised when the active tab changes.
+    /// </summary>
     public event EventHandler<string>? TabChanged;
 
     /// <summary>
@@ -54,10 +50,14 @@ internal sealed class LauncherGridView : View
     /// </summary>
     /// <returns>A summary line describing the grid state.</returns>
     public string BuildSummary()
-        => LauncherTileFormatter.BuildSummary(_state, BuildLayoutState());
+        => _tileFormatter.BuildSummary(_state, BuildLayoutState());
 
+    /// <summary>
+    /// Builds the text representation of available tabs.
+    /// </summary>
+    /// <returns>A tab strip line.</returns>
     public string BuildTabStrip()
-        => LauncherTileFormatter.BuildTabStrip(_state);
+        => _tileFormatter.BuildTabStrip(_state);
 
     /// <summary>
     /// Launches the currently selected application entry.
@@ -239,7 +239,7 @@ internal sealed class LauncherGridView : View
             $"[{index + 1}] {application.Name.Value}",
             application.Description.Value,
             GetPathDisplayText(application),
-            LauncherTileFormatter.FormatAvailability(application.GetAvailability())
+            _tileFormatter.FormatAvailability(application.GetAvailability())
         };
 
         WriteLine(x, y, "+" + new string('-', innerWidth) + "+", borderAttribute);
@@ -254,7 +254,7 @@ internal sealed class LauncherGridView : View
             WriteLine(
                 x,
                 y + 1 + lineIndex,
-                "|" + LauncherTileFormatter.Clip(content, innerWidth).PadRight(innerWidth) + "|",
+                "|" + _tileFormatter.Clip(content, innerWidth).PadRight(innerWidth) + "|",
                 textAttribute);
         }
 
@@ -306,13 +306,14 @@ internal sealed class LauncherGridView : View
     private void NotifyTabChanged() => TabChanged?.Invoke(this, BuildTabStrip());
 
     internal string GetPathDisplayText(ApplicationEntry application)
-        => LauncherTileFormatter.GetPathDisplayText(_state.Options, application);
+        => _tileFormatter.GetPathDisplayText(_state.Options, application);
 
     private LayoutState BuildLayoutState()
         => _state.CreateLayoutState(Bounds.Width, Bounds.Height);
 
-    private readonly LauncherGridController _controller;
+    private readonly ILauncherGridController _controller;
     private readonly ILauncherShortcutResolver _shortcutResolver;
-    private readonly LauncherGridState _state;
+    private readonly ILauncherGridState _state;
+    private readonly ILauncherTileFormatter _tileFormatter;
 
 }

@@ -6,6 +6,8 @@ namespace Infrastructure.Tests;
 
 public sealed class LauncherTileFormatterTests
 {
+    private readonly LauncherTileFormatter _formatter = new();
+
     [Fact(DisplayName = "The summary reports empty launcher state.")]
     [Trait("Category", "Unit")]
     public void BuildSummaryShouldReportEmptyState()
@@ -15,7 +17,7 @@ public sealed class LauncherTileFormatterTests
         var layout = new LayoutState(1, 34, 6, 2, 1, 1);
 
         // Act
-        var summary = LauncherTileFormatter.BuildSummary(state, layout);
+        var summary = _formatter.BuildSummary(state, layout);
 
         // Assert
         summary.Should().Be("Items: 0  Page: 1/1  Columns: 1  Selected: none");
@@ -38,7 +40,7 @@ public sealed class LauncherTileFormatterTests
         var layout = new LayoutState(1, 34, 6, 2, 1, 1);
 
         // Act
-        var summary = LauncherTileFormatter.BuildSummary(state, layout);
+        var summary = _formatter.BuildSummary(state, layout);
 
         // Assert
         summary.Should().Be("Tab: Productivity  Items: 2/3  Page: 2/2  Columns: 1  Selected: Keyboard GB");
@@ -52,7 +54,7 @@ public sealed class LauncherTileFormatterTests
         var state = new LauncherGridState(new LauncherOptions(new LayoutOptions(), []));
 
         // Act
-        var tabs = LauncherTileFormatter.BuildTabStrip(state);
+        var tabs = _formatter.BuildTabStrip(state);
 
         // Assert
         tabs.Should().Be("Tabs: none");
@@ -72,7 +74,7 @@ public sealed class LauncherTileFormatterTests
         _ = state.NextTab();
 
         // Act
-        var tabs = LauncherTileFormatter.BuildTabStrip(state);
+        var tabs = _formatter.BuildTabStrip(state);
 
         // Assert
         tabs.Should().Be("Tabs: Metrics  [Productivity]");
@@ -86,7 +88,7 @@ public sealed class LauncherTileFormatterTests
     public void ClipShouldTrimLongText(string value, int width, string expected)
     {
         // Act
-        var clipped = LauncherTileFormatter.Clip(value, width);
+        var clipped = _formatter.Clip(value, width);
 
         // Assert
         clipped.Should().Be(expected);
@@ -99,7 +101,7 @@ public sealed class LauncherTileFormatterTests
     public void FormatAvailabilityShouldReturnDisplayText(ApplicationAvailability availability, string expected)
     {
         // Act
-        var display = LauncherTileFormatter.FormatAvailability(availability);
+        var display = _formatter.FormatAvailability(availability);
 
         // Assert
         display.Should().Be(expected);
@@ -114,7 +116,7 @@ public sealed class LauncherTileFormatterTests
         var options = new LauncherOptions(new LayoutOptions(), [application], showFullPath: true);
 
         // Act
-        var display = LauncherTileFormatter.GetPathDisplayText(options, application);
+        var display = _formatter.GetPathDisplayText(options, application);
 
         // Assert
         display.Should().Be(application.Path.Value);
@@ -129,7 +131,7 @@ public sealed class LauncherTileFormatterTests
         var options = new LauncherOptions(new LayoutOptions(), [application], showFullPath: false);
 
         // Act
-        var display = LauncherTileFormatter.GetPathDisplayText(options, application);
+        var display = _formatter.GetPathDisplayText(options, application);
 
         // Assert
         display.Should().Be("LaunchKit.exe");

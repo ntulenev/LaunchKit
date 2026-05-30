@@ -2,9 +2,9 @@ using Abstractions;
 
 using FluentAssertions;
 
-using Moq;
-
 using Models;
+
+using Moq;
 
 namespace Infrastructure.Tests;
 

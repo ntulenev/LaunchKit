@@ -9,24 +9,21 @@ namespace Infrastructure;
 /// <summary>
 /// Renders the launcher UI by using Terminal.Gui.
 /// </summary>
-/// <param name="launcherActions">Actions available for launcher entries.</param>
-/// <param name="launcherConfiguration">Configuration source used for reload operations.</param>
-public sealed class ConsoleRenderer(
-    ILauncherActions launcherActions,
-    ILauncherConfiguration launcherConfiguration) : IConsoleRenderer
+public sealed class ConsoleRenderer : IConsoleRenderer
 {
     /// <summary>
-    /// Initializes a renderer with a custom terminal facade for testing.
+    /// Initializes a renderer with custom collaborators for testing.
     /// </summary>
-    /// <param name="launcherActions">Actions available for launcher entries.</param>
     /// <param name="launcherConfiguration">Configuration source used for reload operations.</param>
+    /// <param name="gridViewFactory">Factory used to create the launcher grid view.</param>
     /// <param name="terminalFacade">Facade used to control Terminal.Gui lifecycle operations.</param>
     internal ConsoleRenderer(
-        ILauncherActions launcherActions,
         ILauncherConfiguration launcherConfiguration,
+        ILauncherGridViewFactory gridViewFactory,
         ITerminalFacade terminalFacade)
-        : this(launcherActions, launcherConfiguration)
     {
+        _launcherConfiguration = launcherConfiguration ?? throw new ArgumentNullException(nameof(launcherConfiguration));
+        _gridViewFactory = gridViewFactory ?? throw new ArgumentNullException(nameof(gridViewFactory));
         _terminalFacade = terminalFacade ?? throw new ArgumentNullException(nameof(terminalFacade));
     }
 
@@ -73,17 +70,12 @@ public sealed class ConsoleRenderer(
                 Width = Dim.Fill()
             };
 
-            var gridView = new LauncherGridView(
-                options,
-                _launcherActions,
-                ReloadOptions)
-            {
-                X = 0,
-                Y = 4,
-                Width = Dim.Fill(),
-                Height = Dim.Fill(),
-                CanFocus = true
-            };
+            var gridView = _gridViewFactory.Create(options, ReloadOptions);
+            gridView.X = 0;
+            gridView.Y = 4;
+            gridView.Width = Dim.Fill();
+            gridView.Height = Dim.Fill();
+            gridView.CanFocus = true;
 
             gridView.TabChanged += (_, tabs) => tabsLabel.Text = tabs;
             gridView.SelectionChanged += (_, summary) => summaryLabel.Text = summary;
@@ -102,12 +94,12 @@ public sealed class ConsoleRenderer(
                 new StatusItem(Key.A, "~A~ Admin Launch", gridView.LaunchSelectionAsAdmin),
                 new StatusItem(Key.O, "~O~ Open Folder", gridView.OpenSelectionFolder),
                 new StatusItem(Key.F5, "~F5~ Reload", gridView.ReloadSelection),
-                new StatusItem(Key.Esc, "~Esc~ Exit", () => _terminalFacade.RequestStop())
+                new StatusItem(Key.Esc, "~Esc~ Exit", _terminalFacade.RequestStop)
             ]);
 
             top.Add(statusBar);
 
-            using var registration = cancellationToken.Register(() => _terminalFacade.RequestStop());
+            using var registration = cancellationToken.Register(_terminalFacade.RequestStop);
             _terminalFacade.Run();
         }
         finally
@@ -121,9 +113,7 @@ public sealed class ConsoleRenderer(
     private LauncherOptions ReloadOptions()
         => _launcherConfiguration.Load();
 
-    private readonly ILauncherActions _launcherActions = launcherActions
-        ?? throw new ArgumentNullException(nameof(launcherActions));
-    private readonly ILauncherConfiguration _launcherConfiguration = launcherConfiguration
-        ?? throw new ArgumentNullException(nameof(launcherConfiguration));
-    private readonly ITerminalFacade _terminalFacade = new TerminalFacade();
+    private readonly ILauncherConfiguration _launcherConfiguration;
+    private readonly ILauncherGridViewFactory _gridViewFactory;
+    private readonly ITerminalFacade _terminalFacade;
 }
