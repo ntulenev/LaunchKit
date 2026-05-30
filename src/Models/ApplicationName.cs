@@ -14,6 +14,9 @@ public sealed record ApplicationName
         Value = Normalize(value);
     }
 
+    /// <summary>
+    /// Gets the normalized application name.
+    /// </summary>
     public string Value { get; }
 
     /// <summary>
