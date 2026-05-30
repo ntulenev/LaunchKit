@@ -55,36 +55,10 @@ internal sealed class LauncherGridView : View
     /// </summary>
     /// <returns>A summary line describing the grid state.</returns>
     public string BuildSummary()
-    {
-        if (!_state.Options.HasApplications)
-        {
-            return "Items: 0  Page: 1/1  Columns: 1  Selected: none";
-        }
-
-        var applications = _state.ActiveApplications;
-        var layout = BuildLayoutState();
-        var selectedIndex = _state.SelectedIndex;
-        var pages = layout.CalculatePages(applications.Count);
-        var currentPage = layout.GetPage(selectedIndex);
-        var selectedName = applications[selectedIndex].Name.Value;
-        var activeTab = _state.ActiveTab.Value;
-
-        return $"Tab: {activeTab}  Items: {applications.Count}/{_state.Options.Count}  Page: {currentPage + 1}/{pages}  " +
-               $"Columns: {layout.Columns}  Selected: {selectedName}";
-    }
+        => LauncherTileFormatter.BuildSummary(_state, BuildLayoutState());
 
     public string BuildTabStrip()
-    {
-        if (_state.Options.Tabs.Count == 0)
-        {
-            return "Tabs: none";
-        }
-
-        return "Tabs: " + string.Join("  ", _state.Options.Tabs.Select(tab =>
-            tab == _state.ActiveTab
-                ? $"[{tab.Value}]"
-                : tab.Value));
-    }
+        => LauncherTileFormatter.BuildTabStrip(_state);
 
     /// <summary>
     /// Launches the currently selected application entry.
@@ -320,7 +294,7 @@ internal sealed class LauncherGridView : View
             $"[{index + 1}] {application.Name.Value}",
             application.Description.Value,
             GetPathDisplayText(application),
-            FormatAvailability(application.GetAvailability())
+            LauncherTileFormatter.FormatAvailability(application.GetAvailability())
         };
 
         WriteLine(x, y, "+" + new string('-', innerWidth) + "+", borderAttribute);
@@ -335,7 +309,7 @@ internal sealed class LauncherGridView : View
             WriteLine(
                 x,
                 y + 1 + lineIndex,
-                "|" + Clip(content, innerWidth).PadRight(innerWidth) + "|",
+                "|" + LauncherTileFormatter.Clip(content, innerWidth).PadRight(innerWidth) + "|",
                 textAttribute);
         }
 
@@ -377,31 +351,8 @@ internal sealed class LauncherGridView : View
         SetNeedsDisplay();
     }
 
-    private static string Clip(string value, int width)
-    {
-        return string.IsNullOrEmpty(value) || value.Length <= width
-            ? value
-            : width <= 3
-            ? value[..width]
-            : $"{value[..(width - 3)]}...";
-    }
-
-    private static string FormatAvailability(ApplicationAvailability availability)
-        => availability switch
-        {
-            ApplicationAvailability.Ready => "Ready",
-            ApplicationAvailability.PathNotFound => "Path not found",
-            _ => availability.ToString()
-        };
-
     internal string GetPathDisplayText(ApplicationEntry application)
-    {
-        ArgumentNullException.ThrowIfNull(application);
-
-        return _state.Options.ShowFullPath
-            ? application.Path.Value
-            : application.Path.GetDisplayName();
-    }
+        => LauncherTileFormatter.GetPathDisplayText(_state.Options, application);
 
     private LayoutState BuildLayoutState()
         => _state.CreateLayoutState(Bounds.Width, Bounds.Height);
