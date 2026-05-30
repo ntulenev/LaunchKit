@@ -24,12 +24,24 @@ public sealed class LayoutOptions
         TileSpacing = ValidatePositive(tileSpacing, "Launcher:Layout:TileSpacing");
     }
 
+    /// <summary>
+    /// Gets the requested number of tile columns.
+    /// </summary>
     public int Columns { get; }
 
+    /// <summary>
+    /// Gets the requested tile width.
+    /// </summary>
     public int TileWidth { get; }
 
+    /// <summary>
+    /// Gets the requested tile height.
+    /// </summary>
     public int TileHeight { get; }
 
+    /// <summary>
+    /// Gets the requested spacing between tiles.
+    /// </summary>
     public int TileSpacing { get; }
 
     /// <summary>
