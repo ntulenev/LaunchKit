@@ -37,8 +37,7 @@ internal sealed class LauncherGridView : View
         ArgumentNullException.ThrowIfNull(shortcutResolver);
 
         _state = new LauncherGridState(options);
-        _launcherActions = launcherActions;
-        _reloadOptions = reloadOptions;
+        _controller = new LauncherGridController(_state, launcherActions, reloadOptions);
         _shortcutResolver = shortcutResolver;
 
         CanFocus = true;
@@ -64,85 +63,31 @@ internal sealed class LauncherGridView : View
     /// Launches the currently selected application entry.
     /// </summary>
     public void LaunchSelection()
-    {
-        var application = _state.SelectedApplication;
-        if (application is null)
-        {
-            UpdateStatus("No applications configured.");
-            return;
-        }
-
-        UpdateStatus(_launcherActions.Launch(application));
-    }
+        => Apply(_controller.LaunchSelection());
 
     /// <summary>
     /// Launches the currently selected application entry with administrator privileges.
     /// </summary>
     public void LaunchSelectionAsAdmin()
-    {
-        var application = _state.SelectedApplication;
-        if (application is null)
-        {
-            UpdateStatus("No applications configured.");
-            return;
-        }
-
-        UpdateStatus(_launcherActions.LaunchAsAdmin(application));
-    }
+        => Apply(_controller.LaunchSelectionAsAdmin());
 
     /// <summary>
     /// Opens the containing folder for the currently selected application entry.
     /// </summary>
     public void OpenSelectionFolder()
-    {
-        var application = _state.SelectedApplication;
-        if (application is null)
-        {
-            UpdateStatus("No applications configured.");
-            return;
-        }
-
-        UpdateStatus(_launcherActions.OpenContainingFolder(application));
-    }
+        => Apply(_controller.OpenSelectionFolder());
 
     /// <summary>
     /// Switches to the next application tab.
     /// </summary>
     public void NextTab()
-    {
-        if (!_state.NextTab())
-        {
-            return;
-        }
-
-        NotifyTabChanged();
-        NotifySelectionChanged();
-        UpdateStatus($"Tab: {_state.ActiveTab.Value}");
-    }
+        => Apply(_controller.NextTab());
 
     /// <summary>
     /// Reloads launcher options while preserving the current selection when possible.
     /// </summary>
     public void ReloadSelection()
-    {
-        try
-        {
-            _state.Reload(_reloadOptions());
-
-            UpdateStatus("Configuration reloaded.");
-            NotifyTabChanged();
-            NotifySelectionChanged();
-            SetNeedsDisplay();
-        }
-        catch (Exception ex) when (
-            ex is FileNotFoundException
-            or FormatException
-            or InvalidDataException
-            or InvalidOperationException)
-        {
-            UpdateStatus($"Reload failed: {ex.Message}");
-        }
-    }
+        => Apply(_controller.ReloadSelection());
 
     /// <summary>
     /// Processes keyboard input for navigation and actions.
@@ -328,28 +273,37 @@ internal sealed class LauncherGridView : View
         Driver.AddStr(text);
     }
 
-    private void MoveSelection(int delta) => SetSelection(_state.SelectedIndex + delta);
+    private void MoveSelection(int delta) => Apply(_controller.MoveSelection(delta));
 
     private void SetSelection(int index)
+        => Apply(_controller.SetSelection(index));
+
+    private void Apply(LauncherGridUpdate update)
     {
-        if (!_state.SetSelection(index))
+        if (update.TabChanged)
         {
-            return;
+            NotifyTabChanged();
         }
 
-        NotifySelectionChanged();
-        SetNeedsDisplay();
+        if (update.SelectionChanged)
+        {
+            NotifySelectionChanged();
+        }
+
+        if (update.HasStatus)
+        {
+            StatusChanged?.Invoke(this, update.Status!);
+        }
+
+        if (update.NeedsDisplay)
+        {
+            SetNeedsDisplay();
+        }
     }
 
     private void NotifySelectionChanged() => SelectionChanged?.Invoke(this, BuildSummary());
 
     private void NotifyTabChanged() => TabChanged?.Invoke(this, BuildTabStrip());
-
-    private void UpdateStatus(string status)
-    {
-        StatusChanged?.Invoke(this, status);
-        SetNeedsDisplay();
-    }
 
     internal string GetPathDisplayText(ApplicationEntry application)
         => LauncherTileFormatter.GetPathDisplayText(_state.Options, application);
@@ -357,8 +311,7 @@ internal sealed class LauncherGridView : View
     private LayoutState BuildLayoutState()
         => _state.CreateLayoutState(Bounds.Width, Bounds.Height);
 
-    private readonly ILauncherActions _launcherActions;
-    private readonly Func<LauncherOptions> _reloadOptions;
+    private readonly LauncherGridController _controller;
     private readonly ILauncherShortcutResolver _shortcutResolver;
     private readonly LauncherGridState _state;
 
