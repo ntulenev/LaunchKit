@@ -16,8 +16,14 @@ public sealed record LaunchArguments
             : Environment.ExpandEnvironmentVariables(value.Trim().Trim('"'));
     }
 
+    /// <summary>
+    /// Gets the normalized launch arguments.
+    /// </summary>
     public string Value { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether launch arguments are present.
+    /// </summary>
     public bool HasValue => Value.Length > 0;
 
     /// <summary>
