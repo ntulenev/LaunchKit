@@ -16,6 +16,9 @@ public sealed record ApplicationPath
         Value = Normalize(value);
     }
 
+    /// <summary>
+    /// Gets the normalized launch target path or command.
+    /// </summary>
     public string Value { get; }
 
     /// <summary>
@@ -62,11 +65,17 @@ public sealed record ApplicationPath
             : fileName;
     }
 
+    /// <summary>
+    /// Gets the process working directory derived from a file path, or <see langword="null"/> when unavailable.
+    /// </summary>
     public string? ProcessWorkingDirectory
         => File.Exists(Value)
             ? IOPath.GetDirectoryName(Value)
             : null;
 
+    /// <summary>
+    /// Gets the containing folder for the configured path.
+    /// </summary>
     public string? ContainingFolder
         => Directory.Exists(Value)
             ? Value
