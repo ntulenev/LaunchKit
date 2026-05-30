@@ -30,16 +30,34 @@ public sealed class LayoutState
         ItemsPerPage = itemsPerPage;
     }
 
+    /// <summary>
+    /// Gets the number of tile columns that fit in the current view.
+    /// </summary>
     public int Columns { get; }
 
+    /// <summary>
+    /// Gets the calculated tile width.
+    /// </summary>
     public int TileWidth { get; }
 
+    /// <summary>
+    /// Gets the calculated tile height.
+    /// </summary>
     public int TileHeight { get; }
 
+    /// <summary>
+    /// Gets the spacing between tiles.
+    /// </summary>
     public int TileSpacing { get; }
 
+    /// <summary>
+    /// Gets the number of tile rows that fit on one page.
+    /// </summary>
     public int RowsPerPage { get; }
 
+    /// <summary>
+    /// Gets the number of items that fit on one page.
+    /// </summary>
     public int ItemsPerPage { get; }
 
     /// <summary>
