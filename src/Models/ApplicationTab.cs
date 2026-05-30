@@ -5,6 +5,9 @@ namespace Models;
 /// </summary>
 public sealed record ApplicationTab
 {
+    /// <summary>
+    /// Gets the default tab name used when a tab is not configured.
+    /// </summary>
     public static string DefaultValue { get; } = "Apps";
 
     /// <summary>
@@ -18,8 +21,14 @@ public sealed record ApplicationTab
             : value.Trim();
     }
 
+    /// <summary>
+    /// Gets the normalized tab name.
+    /// </summary>
     public string Value { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether this tab is the default tab.
+    /// </summary>
     public bool IsDefault => string.Equals(Value, DefaultValue, StringComparison.Ordinal);
 
     /// <summary>
