@@ -30,16 +30,34 @@ public sealed class ApplicationEntry
         Tab = tab ?? new ApplicationTab(null);
     }
 
+    /// <summary>
+    /// Gets the application display name.
+    /// </summary>
     public ApplicationName Name { get; }
 
+    /// <summary>
+    /// Gets the launch target path or command.
+    /// </summary>
     public ApplicationPath Path { get; }
 
+    /// <summary>
+    /// Gets the optional launch arguments.
+    /// </summary>
     public LaunchArguments Arguments { get; }
 
+    /// <summary>
+    /// Gets the optional working directory.
+    /// </summary>
     public WorkingDirectoryPath? WorkingDirectory { get; }
 
+    /// <summary>
+    /// Gets the optional application description.
+    /// </summary>
     public ApplicationDescription Description { get; }
 
+    /// <summary>
+    /// Gets the tab/group assigned to the application.
+    /// </summary>
     public ApplicationTab Tab { get; }
 
     /// <summary>
